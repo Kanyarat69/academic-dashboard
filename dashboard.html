@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Executive Dashboard - รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ (2566 - 2568)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- SheetJS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: { 800: '#1e293b', 900: '#0f172a', 950: '#090d16' },
+                        sky: { 500: '#0284c7', 600: '#0369a1', 700: '#075985' },
+                        mint: { 500: '#10b981', 600: '#059669', 50: '#ecfdf5' }
+                    },
+                    fontFamily: { sans: ['Sarabun', 'Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Sarabun', 'Inter', sans-serif; background-color: #f8fafc; color: #334155; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px); border: 1px solid #e2e8f0; box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-sky-500 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-navy-900 text-white sticky top-0 z-40 shadow-xl border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-mint-500 to-indigo-500 flex items-center justify-center text-white shadow-lg font-bold text-xl">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight text-white leading-tight">สำนักงานวิชาการ | Academic Executive Dashboard</h1>
+                        <p class="text-xs text-sky-300">รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ (2566 - 2568)</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden">
+                    <button id="btn-upload-excel" class="flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white shadow-md transition">
+                        <i class="fa-solid fa-file-excel mr-1.5"></i> นำเข้า Excel ใหม่
+                    </button>
+                    <button id="btn-export-csv" class="hidden sm:flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-800 hover:bg-slate-700 text-sky-300 border border-slate-700 shadow-sm transition">
+                        <i class="fa-solid fa-file-csv mr-1.5"></i> ส่งออก CSV
+                    </button>
+                    <button id="btn-presentation-mode" class="flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-mint-600 hover:bg-mint-500 text-white shadow-md transition">
+                        <i class="fa-solid fa-desktop mr-1.5"></i> โหมดนำเสนอ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-navy-950 border-t border-slate-800/80">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex space-x-1 overflow-x-auto custom-scrollbar">
+                <button class="nav-tab active px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 border-sky-400 text-sky-400 whitespace-nowrap transition flex items-center space-x-2" data-tab="tab-overview">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>ภาพรวมระบบ (Executive Overview)</span>
+                </button>
+                <button class="nav-tab px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-white hover:border-slate-500 whitespace-nowrap transition flex items-center space-x-2" data-tab="tab-faculty">
+                    <i class="fa-solid fa-building-columns"></i>
+                    <span>วิเคราะห์รายคณะ (Faculty Deep-Dive)</span>
+                </button>
+                <button class="nav-tab px-4 py-3 text-xs sm:text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-white hover:border-slate-500 whitespace-nowrap transition flex items-center space-x-2" data-tab="tab-lecturer">
+                    <i class="fa-solid fa-user-gear"></i>
+                    <span>ค้นหารายบุคคล (Lecturer Search)</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Global Dynamic Filter Bar -->
+    <section class="bg-white border-b border-slate-200 shadow-sm py-3 px-4 sm:px-6 lg:px-8 sticky top-28 z-30">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs sm:text-sm">
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                <span class="font-bold text-slate-700 flex items-center">
+                    <i class="fa-solid fa-filter text-sky-600 mr-1.5"></i>ตัวกรอง Real-time:
+                </span>
+                
+                <div class="flex items-center space-x-1 bg-slate-100 rounded-lg p-1 border border-slate-200" id="year-filter-group">
+                    <button class="year-filter-btn active px-3 py-1 rounded-md text-xs font-bold bg-navy-900 text-white shadow-sm transition" data-year="ALL">ทั้งหมด (66-68)</button>
+                    <button class="year-filter-btn px-3 py-1 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition" data-year="2566">ปี 2566</button>
+                    <button class="year-filter-btn px-3 py-1 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition" data-year="2567">ปี 2567</button>
+                    <button class="year-filter-btn px-3 py-1 rounded-md text-xs font-bold text-slate-600 hover:text-slate-900 transition" data-year="2568">ปี 2568</button>
+                </div>
+
+                <select id="global-semester-filter" class="bg-slate-50 border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-sky-500 focus:border-sky-500 p-1.5 font-bold">
+                    <option value="ALL">ทุกภาคการศึกษา (1, 2, Summer)</option>
+                    <option value="1">ภาคเรียนที่ 1</option>
+                    <option value="2">ภาคเรียนที่ 2</option>
+                    <option value="S">ภาคฤดูร้อน (Summer)</option>
+                </select>
+
+                <select id="global-degree-filter" class="bg-slate-50 border border-slate-300 text-slate-700 text-xs rounded-lg focus:ring-sky-500 focus:border-sky-500 p-1.5 font-bold">
+                    <option value="ALL">ทุกระดับคุณวุฒิ</option>
+                    <option value="ปริญญาเอก">ปริญญาเอก</option>
+                    <option value="ปริญญาโท">ปริญญาโท</option>
+                    <option value="ปริญญาตรี">ปริญญาตรี</option>
+                    <option value="อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)">อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)</option>
+                </select>
+            </div>
+
+            <div class="flex items-center space-x-2 text-xs font-semibold text-slate-600 bg-sky-50 px-3 py-1.5 rounded-full border border-sky-100">
+                <span class="w-2 h-2 rounded-full bg-mint-500 animate-pulse"></span>
+                <span>สถานะข้อมูล: <strong id="filter-status-rows">4,243 Grand Total</strong> | <strong id="filter-status-lecturers">1,481 อาจารย์ (Unique)</strong></span>
+            </div>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        <!-- TAB 1: EXECUTIVE OVERVIEW -->
+        <div id="tab-overview" class="tab-content block space-y-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- KPI 1: ทั้งหมด -->
+                <div onclick="exportFilteredExcel('ALL')" class="glass-card rounded-2xl p-5 shadow-sm border-l-4 border-l-sky-600 cursor-pointer hover:shadow-md hover:scale-[1.02] transition duration-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase">อาจารย์พิเศษรวม (GRAND TOTAL)</p>
+                            <h3 id="kpi-total-lecturers" class="text-2xl sm:text-3xl font-extrabold text-navy-900 mt-1">4,243</h3>
+                            <p class="text-[11px] text-sky-600 font-bold mt-1 flex items-center"><i class="fa-solid fa-file-excel mr-1"></i> คลิกเพื่อโหลด Excel รวม</p>
+                        </div>
+                        <div class="p-3 bg-sky-50 text-sky-600 rounded-xl"><i class="fa-solid fa-user-tie text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- KPI 2: ปริญญาโท -->
+                <div onclick="exportFilteredExcel('ปริญญาโท')" class="glass-card rounded-2xl p-5 shadow-sm border-l-4 border-l-emerald-500 cursor-pointer hover:shadow-md hover:scale-[1.02] transition duration-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase">ระดับปริญญาโท (GRAND TOTAL)</p>
+                            <h3 id="kpi-master-degree" class="text-2xl sm:text-3xl font-extrabold text-navy-900 mt-1">611</h3>
+                            <p class="text-[11px] text-emerald-600 font-bold mt-1 flex items-center"><i class="fa-solid fa-file-excel mr-1"></i> คลิกเพื่อโหลด Excel ป.โท</p>
+                        </div>
+                        <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fa-solid fa-graduation-cap text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- KPI 3: ปริญญาเอก -->
+                <div onclick="exportFilteredExcel('ปริญญาเอก')" class="glass-card rounded-2xl p-5 shadow-sm border-l-4 border-l-purple-500 cursor-pointer hover:shadow-md hover:scale-[1.02] transition duration-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase">ระดับปริญญาเอก (GRAND TOTAL)</p>
+                            <h3 id="kpi-doctor-degree" class="text-2xl sm:text-3xl font-extrabold text-navy-900 mt-1">222</h3>
+                            <p class="text-[11px] text-purple-600 font-bold mt-1 flex items-center"><i class="fa-solid fa-file-excel mr-1"></i> คลิกเพื่อโหลด Excel ป.เอก</p>
+                        </div>
+                        <div class="p-3 bg-purple-50 text-purple-600 rounded-xl"><i class="fa-solid fa-award text-xl"></i></div>
+                    </div>
+                </div>
+
+                <!-- KPI 4: ปริญญาตรี -->
+                <div onclick="exportFilteredExcel('ปริญญาตรี')" class="glass-card rounded-2xl p-5 shadow-sm border-l-4 border-l-amber-500 cursor-pointer hover:shadow-md hover:scale-[1.02] transition duration-200">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-xs font-semibold text-slate-500 uppercase">ระดับปริญญาตรี (GRAND TOTAL)</p>
+                            <h3 id="kpi-bachelor-degree" class="text-2xl sm:text-3xl font-extrabold text-navy-900 mt-1">3,375</h3>
+                            <p class="text-[11px] text-amber-600 font-bold mt-1 flex items-center"><i class="fa-solid fa-file-excel mr-1"></i> คลิกเพื่อโหลด Excel ป.ตรี</p>
+                        </div>
+                        <div class="p-3 bg-amber-50 text-amber-600 rounded-xl"><i class="fa-solid fa-book-open text-xl"></i></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-navy-900 mb-1">เปรียบเทียบจำนวนอาจารย์พิเศษตามปีการศึกษา</h3>
+                    <p class="text-xs text-slate-500 mb-4">จำแนกตามจำนวนบุคคลที่ไม่ซ้ำคน (Count Distinct Person)</p>
+                    <div class="relative h-64"><canvas id="chart-yoy-trend"></canvas></div>
+                </div>
+
+                <div class="lg:col-span-5 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-navy-900 mb-1">สัดส่วนคุณวุฒิการศึกษาอาจารย์พิเศษ</h3>
+                    <p class="text-xs text-slate-500 mb-4">นับตามจำนวนบุคคลในช่อง "ชื่อ-สกุล" (Distinct Person)</p>
+                    <div class="relative h-64 flex items-center justify-center"><canvas id="chart-degree-pie"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-navy-900 mb-1">ภาระงานสอนอาจารย์พิเศษจำแนกตามคณะ (ทุกคณะวิชา)</h3>
+                    <p class="text-xs text-slate-500 mb-4">เรียงลำดับตามยอด Grand Total จากมากไปน้อย</p>
+                    <div class="relative h-96"><canvas id="chart-faculty-top10"></canvas></div>
+                </div>
+
+                <div class="lg:col-span-5 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-navy-900 mb-1">กระจายตัวตามภาคการศึกษา</h3>
+                    <p class="text-xs text-slate-500 mb-4">สัดส่วนภาระงานสอนในภาคเรียนที่ 1, 2 และ Summer</p>
+                    <div class="relative h-96 flex items-center justify-center"><canvas id="chart-semester-bar"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Overview Workload Table -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 class="text-base font-bold text-navy-900">ตารางสรุปภาระงานอาจารย์พิเศษ</h3>
+                    
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="overview-table-year-filter" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg p-1.5 font-bold focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">ทุกปีการศึกษา</option>
+                            <option value="2566">ปี 2566</option>
+                            <option value="2567">ปี 2567</option>
+                            <option value="2568">ปี 2568</option>
+                        </select>
+                        
+                        <select id="overview-table-semester-filter" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg p-1.5 font-bold focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">ทุกภาคเรียน</option>
+                            <option value="1">ภาคเรียนที่ 1</option>
+                            <option value="2">ภาคเรียนที่ 2</option>
+                            <option value="S">ภาคฤดูร้อน (Summer)</option>
+                        </select>
+
+                        <span id="overview-table-badge" class="px-3 py-1 bg-sky-100 text-sky-800 text-xs font-bold rounded-full">แสดง 100 รายการแรก</span>
+                    </div>
+                </div>
+                <div class="overflow-x-auto max-h-96 custom-scrollbar">
+                    <table class="w-full text-left text-sm text-slate-700">
+                        <thead class="bg-slate-100 text-xs font-bold text-slate-600 uppercase sticky top-0">
+                            <tr>
+                                <th class="py-3 px-4">ปี</th>
+                                <th class="py-3 px-4">ภาค</th>
+                                <th class="py-3 px-4">คณะ / วิทยาลัย</th>
+                                <th class="py-3 px-4">สาขาวิชา</th>
+                                <th class="py-3 px-4">อาจารย์ผู้สอน</th>
+                                <th class="py-3 px-4">หน่วยงาน / สังกัด</th>
+                                <th class="py-3 px-4">คุณวุฒิ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overview-table-body" class="divide-y divide-slate-200 text-xs"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: FACULTY DEEP-DIVE -->
+        <div id="tab-faculty" class="tab-content hidden space-y-6">
+            <div class="bg-gradient-to-r from-navy-900 via-sky-900 to-slate-900 rounded-2xl p-6 text-white shadow-lg">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <span class="bg-sky-500/30 text-sky-200 text-xs font-bold px-2.5 py-1 rounded-md border border-sky-400/30">Faculty Operational Console</span>
+                        <h2 class="text-xl font-bold mt-2">ศูนย์วิเคราะห์ข้อมูลระดับปฏิบัติการรายคณะ</h2>
+                        <p class="text-xs text-sky-200 mt-1">เจาะลึกเฉพาะคณะ: สาขาวิชา, รายวิชาหลัก, และบริษัท/องค์กรสังกัดอาจารย์พิเศษ</p>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                        <div>
+                            <label for="faculty-dropdown-select" class="block text-xs font-bold text-sky-200 mb-1">เลือกคณะวิชา:</label>
+                            <select id="faculty-dropdown-select" class="bg-white text-navy-900 text-xs font-bold rounded-xl p-2.5 shadow focus:ring-2 focus:ring-mint-500 border-0">
+                                <option value="ALL">ทั้งหมด (ทุกคณะวิชา)</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="fac-semester-select" class="block text-xs font-bold text-sky-200 mb-1">ภาคการศึกษา:</label>
+                            <select id="fac-semester-select" class="bg-white text-navy-900 text-xs font-bold rounded-xl p-2.5 shadow focus:ring-2 focus:ring-mint-500 border-0">
+                                <option value="ALL">ทั้งหมด (1, 2, Summer)</option>
+                                <option value="1">ภาคเรียนที่ 1</option>
+                                <option value="2">ภาคเรียนที่ 2</option>
+                                <option value="S">ภาค Summer</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="fac-major-select" class="block text-xs font-bold text-sky-200 mb-1">สาขาวิชา:</label>
+                            <select id="fac-major-select" class="bg-white text-navy-900 text-xs font-bold rounded-xl p-2.5 shadow focus:ring-2 focus:ring-mint-500 border-0">
+                                <option value="ALL">ทุกสาขาวิชาในคณะ</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-sky-500">
+                    <p class="text-xs text-slate-500 font-semibold uppercase">อาจารย์พิเศษประจำคณะ</p>
+                    <h3 id="faculty-kpi-lecturers" class="text-2xl font-extrabold text-navy-900 mt-1">0</h3>
+                    <p class="text-[11px] text-sky-600 font-bold mt-1">คน (Distinct Headcount)</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-500">
+                    <p class="text-xs text-slate-500 font-semibold uppercase">สาขาวิชาในคณะ</p>
+                    <h3 id="faculty-kpi-majors" class="text-2xl font-extrabold text-navy-900 mt-1">0</h3>
+                    <p class="text-[11px] text-emerald-600 font-bold mt-1">สาขาวิชาที่มีการสอน</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-purple-500">
+                    <p class="text-xs text-slate-500 font-semibold uppercase">วิชาที่ใช้อาจารย์พิเศษ</p>
+                    <h3 id="faculty-kpi-courses" class="text-2xl font-extrabold text-navy-900 mt-1">0</h3>
+                    <p class="text-[11px] text-purple-600 font-bold mt-1">รายวิชา (Distinct Course Code)</p>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 border-l-4 border-l-amber-500">
+                    <p class="text-xs text-slate-500 font-semibold uppercase">องค์กร/สังกัดภายนอก</p>
+                    <h3 id="faculty-kpi-orgs" class="text-2xl font-extrabold text-navy-900 mt-1">0</h3>
+                    <p class="text-[11px] text-amber-600 font-bold mt-1">หน่วยงาน/บริษัทพันธมิตร</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-navy-900 mb-1">เปรียบเทียบภาระงานสอนจำแนกตามสาขาวิชา</h3>
+                    <p class="text-xs text-slate-500 mb-4">สัดส่วนภาระงานสอนทุกสาขาวิชาในคณะที่เลือก</p>
+                    <div class="relative h-64"><canvas id="chart-faculty-major"></canvas></div>
+                </div>
+
+                <div class="lg:col-span-6 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-base font-bold text-navy-900 mb-1">แนวโน้มการใช้อาจารย์พิเศษ </h3>
+                    <p class="text-xs text-slate-500 mb-4">จำแนกตามปี พ.ศ. 2566 - 2568 (Distinct Person)</p>
+                    <div class="relative h-64"><canvas id="chart-faculty-yoy"></canvas></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-sm font-bold text-navy-900 flex items-center">
+                                <i class="fa-solid fa-book-bookmark mr-2 text-sky-600"></i> 5 อันดับรายวิชาที่ใช้อาจารย์พิเศษมากที่สุด
+                            </h3>
+                            <p class="text-[11px] text-slate-500">เรียงตามจำนวนครั้งการปฏิบัติการสอนในคณะ</p>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <table class="w-full text-left text-xs text-slate-700">
+                            <thead class="bg-slate-100 font-bold text-slate-600 uppercase">
+                                <tr>
+                                    <th class="py-2 px-3">รหัสวิชา</th>
+                                    <th class="py-2 px-3">ชื่อรายวิชา</th>
+                                    <th class="py-2 px-3 text-center">อาจารย์ผู้สอน</th>
+                                </tr>
+                            </thead>
+                            <tbody id="faculty-top-courses-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-6 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-sm font-bold text-navy-900 flex items-center">
+                                <i class="fa-solid fa-building-user mr-2 text-mint-600"></i> สัดส่วนบริษัท / องค์กรสังกัดภายนอกที่ส่งอาจารย์มาสอน
+                            </h3>
+                            <p class="text-[11px] text-slate-500">แสดงหน่วยงานพันธมิตรหลักของคณะ</p>
+                        </div>
+                    </div>
+                    <div class="p-4">
+                        <table class="w-full text-left text-xs text-slate-700">
+                            <thead class="bg-slate-100 font-bold text-slate-600 uppercase">
+                                <tr>
+                                    <th class="py-2 px-3">ชื่อหน่วยงาน / บริษัท / องค์กรสังกัด</th>
+                                    <th class="py-2 px-3 text-center">จำนวนอาจารย์ (รายการ)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="faculty-top-orgs-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                        <h3 class="text-base font-bold text-navy-900">ตารางรายชื่ออาจารย์ผู้สอนประจำคณะ (Lecturer Roster)</h3>
+                        <p class="text-xs text-slate-500">แสดงรายชื่ออาจารย์พิเศษ สาขาวิชา คุณวุฒิ สังกัดหน่วยงาน วิชาที่สอน และหน่วยกิต</p>
+                    </div>
+                    <div class="relative w-full sm:w-72">
+                        <input type="text" id="fac-table-search" placeholder="ค้นหาชื่ออาจารย์ หรือสังกัด..." class="w-full pl-9 pr-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:ring-2 focus:ring-sky-500">
+                        <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    </div>
+                </div>
+                <div class="overflow-x-auto max-h-96 custom-scrollbar">
+                    <table class="w-full text-left text-sm text-slate-700">
+                        <thead class="bg-slate-100 text-xs font-bold text-slate-600 uppercase sticky top-0">
+                            <tr>
+                                <th class="py-3 px-4">ชื่อ-สกุล อาจารย์</th>
+                                <th class="py-3 px-4">สาขาวิชา</th>
+                                <th class="py-3 px-4">คุณวุฒิ</th>
+                                <th class="py-3 px-4">หน่วยงาน / สังกัด / บริษัท</th>
+                                <th class="py-3 px-4">ชื่อรายวิชาที่สอน (พร้อมรหัสวิชา)</th>
+                                <th class="py-3 px-4 text-center">หน่วยกิต</th>
+                            </tr>
+                        </thead>
+                        <tbody id="faculty-lecturer-table-body" class="divide-y divide-slate-200 text-xs"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: LECTURER SEARCH ENGINE -->
+        <div id="tab-lecturer" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+                <div class="max-w-3xl mx-auto text-center space-y-4">
+                    <div class="inline-flex p-3 bg-sky-50 text-sky-600 rounded-full mb-1">
+                        <i class="fa-solid fa-id-card text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-navy-900">ค้นหาประวัติและภาระงานสอนอาจารย์พิเศษรายบุคคล</h2>
+                    <p class="text-xs text-slate-500">พิมพ์ชื่อ หรือ นามสกุล เพื่อดูสังกัดประวัติการสอนจริง</p>
+                    
+                    <div class="relative max-w-xl mx-auto">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                        </div>
+                        <input type="text" id="lecturer-search-input" class="w-full pl-11 pr-24 py-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:bg-white transition shadow-sm" placeholder="พิมพ์ชื่ออาจารย์ เช่น 'จุลชาติ', 'กัญญภัทร', 'พีระพล' ...">
+                        <button id="btn-clear-search" class="absolute right-2 top-2 px-3 py-1.5 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition font-bold">ล้างค่า</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="lecturer-profile-card" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div class="lg:col-span-7 bg-gradient-to-r from-sky-900 via-navy-900 to-slate-900 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex flex-col justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-2xl bg-mint-500 text-white flex items-center justify-center font-bold text-2xl shadow-inner border-2 border-white/20">
+                            <span id="profile-avatar-initial">อ</span>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <h3 id="profile-name" class="text-xl font-bold">อาจารย์...</h3>
+                                <span id="profile-degree-badge" class="px-2.5 py-0.5 bg-mint-500/20 text-mint-300 text-xs font-bold rounded-full border border-mint-400/30">คุณวุฒิ</span>
+                            </div>
+                            <p id="profile-org" class="text-xs text-sky-200 mt-1"><i class="fa-solid fa-building-user mr-1.5"></i>สังกัด: ผู้เชี่ยวชาญจากสถานประกอบการ</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-3 bg-white/10 p-3.5 rounded-xl border border-white/10 text-xs mt-6">
+                        <div>
+                            <span class="block text-slate-300">ภาระงานรวม:</span>
+                            <span id="profile-total-courses" class="font-extrabold text-mint-400 text-base">0 รายการ</span>
+                        </div>
+                        <div class="border-l border-slate-700 pl-3">
+                            <span class="block text-slate-300">สอนในคณะ:</span>
+                            <span id="profile-faculties-count" class="font-bold text-sky-300 text-sm">0 คณะ</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+                    <h3 class="text-sm font-bold text-navy-900 mb-1">แนวโน้มภาระงานสอนย้อนหลัง</h3>
+                    <p class="text-[11px] text-slate-500 mb-3">จำแนกตามปีการศึกษา 2566 - 2568</p>
+                    <div class="relative h-36"><canvas id="chart-lecturer-trend"></canvas></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 class="text-sm font-bold text-navy-900 flex items-center">
+                        <i class="fa-solid fa-clock-rotate-left mr-2 text-sky-600"></i> ประวัติภาระการสอนย้อนหลัง
+                    </h3>
+                    
+                    <div class="flex flex-wrap items-center gap-2">
+                        <select id="lecturer-year-filter" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg p-1.5 font-bold focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">ทุกปีการศึกษา</option>
+                        </select>
+                        
+                        <select id="lecturer-semester-filter" class="bg-white border border-slate-300 text-slate-700 text-xs rounded-lg p-1.5 font-bold focus:ring-2 focus:ring-sky-500">
+                            <option value="ALL">ทุกภาคเรียน</option>
+                            <option value="1">ภาคเรียนที่ 1</option>
+                            <option value="2">ภาคเรียนที่ 2</option>
+                            <option value="S">ภาคฤดูร้อน (Summer)</option>
+                        </select>
+
+                        <span id="search-result-count" class="text-xs font-semibold text-slate-500 ml-2">พบ 0 รายการ</span>
+                    </div>
+                </div>
+                
+                <div class="overflow-x-auto max-h-96 custom-scrollbar">
+                    <table class="w-full text-left text-sm text-slate-700">
+                        <thead class="bg-slate-100 text-xs font-bold text-slate-600 uppercase sticky top-0">
+                            <tr>
+                                <th class="py-3 px-4">ปีการศึกษา</th>
+                                <th class="py-3 px-4">ภาคเรียน</th>
+                                <th class="py-3 px-4">คณะ / วิทยาลัย</th>
+                                <th class="py-3 px-4">สาขาวิชา</th>
+                                <th class="py-3 px-4">ชื่อวิชาและรหัสวิชา</th>
+                                <th class="py-3 px-4 text-center">หน่วยกิต</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lecturer-search-table-body" class="divide-y divide-slate-200 text-xs">
+                            <tr>
+                                <td colspan="6" class="py-8 text-center text-slate-400">
+                                    <i class="fa-solid fa-user-check text-3xl mb-2 text-slate-300"></i>
+                                    <p>กรุณากรอกชื่ออาจารย์ในช่องค้นหาด้านบน เพื่อเรียกดูประวัติการสอน</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Presentation Mode Modal -->
+    <div id="presentation-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 relative shadow-2xl">
+            <button id="btn-close-presentation" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-xl font-bold">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="space-y-6">
+                <div class="border-b border-slate-200 pb-4">
+                    <span class="bg-mint-100 text-mint-800 text-xs font-bold px-2.5 py-1 rounded-md">Executive Presentation Slide</span>
+                    <h2 class="text-2xl font-extrabold text-navy-900 mt-2">รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ (2566 - 2568)</h2>
+                    <p class="text-xs text-slate-500">สำหรับนำเสนอคณะกรรมการและผู้บริหารสำนักงานวิชาการ</p>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div class="p-4 bg-sky-50 rounded-xl border border-sky-100">
+                        <span class="text-xs text-sky-700 font-bold block">อาจารย์พิเศษรวม</span>
+                        <span id="pres-total-lecturers" class="text-3xl font-black text-navy-900 mt-1 block">4,243</span>
+                    </div>
+                    <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                        <span class="text-xs text-emerald-700 font-bold block">ระดับปริญญาโท</span>
+                        <span id="pres-total-faculties" class="text-3xl font-black text-emerald-600 mt-1 block">611</span>
+                    </div>
+                    <div class="p-4 bg-purple-50 rounded-xl border border-purple-100">
+                        <span class="text-xs text-purple-700 font-bold block">ระดับปริญญาเอก</span>
+                        <span id="pres-total-courses" class="text-3xl font-black text-purple-600 mt-1 block">222</span>
+                    </div>
+                    <div class="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                        <span class="text-xs text-amber-700 font-bold block">ระดับปริญญาตรี</span>
+                        <span id="pres-total-rows" class="text-3xl font-black text-amber-600 mt-1 block">3,375</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-end pt-4 border-t border-slate-200">
+                    <button onclick="window.print()" class="px-4 py-2 bg-navy-900 text-white rounded-lg text-xs font-bold hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-print mr-1.5"></i> พิมพ์ / บันทึก PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN DATA ENGINE & EXCEL PARSER SCRIPT -->
+    <script>
+        function cleanFacultyName(facName) {
+            if (!facName) return '';
+            let cleaned = String(facName).trim();
+            if (cleaned.startsWith('คณะ')) {
+                cleaned = cleaned.replace('คณะ', '').trim();
+            }
+            return cleaned;
+        }
+
+        function cleanDegreeName(degreeStr) {
+            if (!degreeStr) return 'อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)';
+            const str = String(degreeStr).trim();
+            if (str.includes('เอก')) return 'ปริญญาเอก';
+            if (str.includes('โท')) return 'ปริญญาโท';
+            if (str.includes('ตรี')) return 'ปริญญาตรี';
+            return 'อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)';
+        }
+
+        const lecturerDegreeStatsByYear = {
+            "ALL": { "ปริญญาโท": 400, "ปริญญาเอก": 384, "ปริญญาตรี": 240, "อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)": 290 },
+            "2568": { "ปริญญาเอก": 258, "ปริญญาโท": 256, "ปริญญาตรี": 170, "อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)": 172 },
+            "2567": { "ปริญญาโท": 204, "ปริญญาเอก": 196, "ปริญญาตรี": 130, "อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)": 253 },
+            "2566": { "อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)": 259, "ปริญญาเอก": 215, "ปริญญาโท": 194, "ปริญญาตรี": 84 }
+        };
+
+        const facultyGrandTotals = [
+            { name: "ดิจิทัลมีเดีย", count: 1808 },
+            { name: "บัณฑิตศึกษาด้านการจัดการ", count: 469 },
+            { name: "นิติศาสตร์", count: 309 },
+            { name: "นิเทศศาสตร์", count: 271 },
+            { name: "เทคโนโลยีสารสนเทศ", count: 253 },
+            { name: "วิศวกรรมศาสตร์", count: 213 },
+            { name: "การออกแบบและสถาปัตยกรรมศาสตร์", count: 204 },
+            { name: "บริหารธุรกิจ", count: 200 },
+            { name: "บัญชี", count: 114 },
+            { name: "โลจิสติกส์และซัพพลายเชน", count: 109 }
+        ];
+
+        function generateStructuredMockData() {
+            const data = [];
+            let id = 1;
+
+            const sampleLecturersPool = [
+                { name: "อ.พัสวีร์ สุขขุม", org: "ไม่พบข้อมูล", degree: "ปริญญาโท" },
+                { name: "อ.รัฐพล สันติวิจิตร", org: "บจก.อินโนเวทีฟ อินฟอร์เมชั่น ซิสเต็ม เดเวล็อปเมนท์", degree: "ปริญญาโท" },
+                { name: "อ.ศุภเศรษฐ์ วรธรรมธร", org: "CARIVA (Thailand) Company Limited", degree: "ปริญญาโท" },
+                { name: "ดร.กัญญภัทร กสิมสุวรรณ", org: "บริษัท E-Ideas Co., Ltd.", degree: "ปริญญาเอก" },
+                { name: "ดร.อัคร กิจการเจริญสิน", org: "มหาวิทยาลัยหอการค้า", degree: "ปริญญาเอก" },
+                { name: "อ.กฤษดาภาพ สุขสมบูรณ์", org: "T.A.Tsolution Service Co.,Ltd.", degree: "ปริญญาโท" },
+                { name: "อ.จตุรงค์ บุญส่ง", org: "ประกอบอาชีพอิสระ", degree: "ปริญญาตรี" },
+                { name: "อ.พีระพล นิลพัด", org: "ประกอบอาชีพอิสระ", degree: "ปริญญาตรี" },
+                { name: "คุณไอรดา เหลืองวิไล", org: "สำนักงานพัฒนารัฐบาลดิจิทัล (DGA)", degree: "ปริญญาโท" },
+                { name: "คุณณัฐดนัย เวียงวัง", org: "Doppio Tech Ltd.", degree: "ปริญญาโท" },
+                { name: "ดร.ชูพรรณ โกวานิชย์", org: "Casmatt Co., Ltd.", degree: "ปริญญาเอก" },
+                { name: "อ.เมษ ยิ้มสมบูรณ์", org: "ผู้กำกับ/นักเขียนบท อิสระ", degree: "ปริญญาตรี" },
+                { name: "อ.กฤษณะ ชันแสง", org: "Motley Party Studio", degree: "ปริญญาตรี" },
+                { name: "ดร.ชลธิชา รอดกันภัย", org: "มหาวิทยาลัยรามคำแหง", degree: "ปริญญาเอก" },
+                { name: "เรืออากาศตรีสุวิชา สวัสดิ์", org: "กรมกำลังพลทหาร", degree: "ปริญญาตรี" },
+                { name: "ดร.เกษม บุญน้อยกอ", org: "เทศบาลตำบลท่าพ้อ", degree: "ปริญญาเอก" }
+            ];
+
+            const majorMap = {
+                "ดิจิทัลมีเดีย": [
+                    { name: "รายวิชาพื้นฐาน", code: "CDM101", subject: "ความรู้เบื้องต้นเกี่ยวกับสื่อดิจิทัล", credits: "3(3-0-6)" },
+                    { name: "ดิจิทัลอาร์ตส์", code: "ART204", subject: "การวาดภาพดิจิทัลและคอนเซปต์อาร์ต", credits: "3(2-2-5)" },
+                    { name: "คอมพิวเตอร์แอนิเมชันและวิชวลเอฟเฟกต์", code: "ANI302", subject: "การสร้างแบบจำลอง 3 มิติและแอนิเมชัน", credits: "3(2-2-5)" },
+                    { name: "การออกแบบกราฟิก", code: "GRD201", subject: "การออกแบบเรขศิลป์ดิจิทัล", credits: "3(2-2-5)" },
+                    { name: "การออกแบบอินเทอร์แอคทีฟและเกม", code: "GMD305", subject: "การออกแบบเกมและอินเทอร์แอคทีฟ", credits: "3(2-2-5)" }
+                ],
+                "เทคโนโลยีสารสนเทศ": [
+                    { name: "เทคโนโลยีสารสนเทศและการสื่อสาร", code: "BCS118", subject: "เทคโนโลยีสารสนเทศเพื่ออาชีพ และ การทำงาน", credits: "3(2-2-5)" },
+                    { name: "วิศวกรรมคอมพิวเตอร์", code: "CPE302", subject: "วิศวกรรมซอฟต์แวร์", credits: "3(3-0-6)" },
+                    { name: "วิทยาการคอมพิวเตอร์และนวัตกรรมการพัฒนาซอฟต์แวร์", code: "UID10667", subject: "เทคโนโลยีสารสนเทศเพื่ออาชีพ", credits: "3(2-2-5)" },
+                    { name: "วิทยาศาตรมหาบัณฑิต สาขาวิชาเทคโนโลยีสารสนเทศ", code: "ITE61467", subject: "ความมั่นคงปลอดภัยไซเบอร์", credits: "3(3-0-6)" }
+                ]
+            };
+
+            const yearsConfig = [
+                { year: "2566", totalRatio: 0.85, poolSize: 9 },
+                { year: "2567", totalRatio: 0.95, poolSize: 12 },
+                { year: "2568", totalRatio: 1.15, poolSize: 16 }
+            ];
+
+            yearsConfig.forEach(yCfg => {
+                facultyGrandTotals.forEach((fac, facIdx) => {
+                    const rowsForFac = Math.round((fac.count / 4242) * 1300 * yCfg.totalRatio);
+                    const majors = majorMap[fac.name] || [
+                        { name: `สาขาวิชาประจำ ${fac.name}`, code: "GEN101", subject: "การศึกษาทั่วไป", credits: "3(3-0-6)" }
+                    ];
+                    
+                    const activePool = sampleLecturersPool.slice(0, yCfg.poolSize);
+
+                    for (let i = 0; i < rowsForFac; i++) {
+                        const lect = activePool[(i + facIdx) % activePool.length];
+                        const semester = (i % 10 < 5) ? "1" : ((i % 10 < 8) ? "2" : "S");
+                        const majorObj = majors[i % majors.length];
+                        
+                        data.push({
+                            id: id++,
+                            year: yCfg.year,
+                            semester: semester,
+                            faculty: cleanFacultyName(fac.name),
+                            major: majorObj.name,
+                            courseCode: majorObj.code,
+                            courseName: majorObj.subject,
+                            credits: majorObj.credits,
+                            degree: cleanDegreeName(lect.degree),
+                            name: lect.name,
+                            organization: lect.org
+                        });
+                    }
+                });
+            });
+
+            return data;
+        }
+
+        let masterDataset = generateStructuredMockData();
+
+        let currentFilters = {
+            year: "ALL",
+            semester: "ALL",
+            degree: "ALL"
+        };
+
+        let currentMatchedLecturerData = [];
+
+        let chartYoy = null, chartDegree = null, chartFacultyTop10 = null;
+        let chartSemester = null, chartFacultyYoy = null, chartFacultyMajor = null;
+        let chartLecturerTrend = null;
+
+        // ฟังก์ชันดาวน์โหลดไฟล์ Excel ชนิดปลดล็อก (Editable Open XML Binary Format)
+        function exportFilteredExcel(degreeType) {
+            let dataToExport = getFilteredData();
+
+            if (degreeType !== 'ALL') {
+                dataToExport = dataToExport.filter(d => cleanDegreeName(d.degree) === degreeType);
+            }
+
+            if (dataToExport.length === 0) {
+                alert("ไม่พบข้อมูลสำหรับส่งออกในหมวดหมู่นี้");
+                return;
+            }
+
+            const semesterOrder = { '1': 1, '2': 2, 'S': 3 };
+
+            const sortedData = [...dataToExport].sort((a, b) => {
+                if (a.year !== b.year) {
+                    return String(a.year).localeCompare(String(b.year));
+                }
+                const orderA = semesterOrder[a.semester] || 99;
+                const orderB = semesterOrder[b.semester] || 99;
+                if (orderA !== orderB) {
+                    return orderA - orderB;
+                }
+                return String(a.faculty).localeCompare(String(b.faculty), 'th');
+            });
+
+            const excelRows = sortedData.map((row, index) => ({
+                "ลำดับ": index + 1,
+                "ปีการศึกษา": row.year || '',
+                "ภาคการศึกษา": row.semester === 'S' ? 'ภาคฤดูร้อน' : (row.semester ? `ภาคเรียนที่ ${row.semester}` : ''),
+                "คณะ / วิทยาลัย": row.faculty || '',
+                "สาขาวิชา": row.major || '',
+                "รหัสวิชา": row.courseCode || '',
+                "ชื่อวิชา": row.courseName || '',
+                "หน่วยกิต": row.credits || '',
+                "ระดับคุณวุฒิ": row.degree || '',
+                "ชื่อ-สกุล อาจารย์": row.name || '',
+                "หน่วยงาน / บริษัทสังกัด": row.organization || ''
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(excelRows);
+
+            // ตั้งค่าความกว้างคอลัมน์อัตโนมัติ
+            worksheet['!cols'] = [
+                { wch: 8 },  
+                { wch: 12 }, 
+                { wch: 14 }, 
+                { wch: 28 }, 
+                { wch: 28 }, 
+                { wch: 14 }, 
+                { wch: 38 }, 
+                { wch: 12 }, 
+                { wch: 18 }, 
+                { wch: 28 }, 
+                { wch: 38 }  
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "ข้อมูลอาจารย์พิเศษ");
+
+            const filename = degreeType === 'ALL' 
+                ? `รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ (2566 - 2568)_ทั้งหมด.xlsx` 
+                : `รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ (2566 - 2568)_ระดับ${degreeType}.xlsx`;
+
+            // เขียนไฟล์รูปแบบ ArrayBuffer (Binary) ป้องกัน Microsoft Excel บล็อกโหมด Read-Only
+            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        function getFilteredData() {
+            return masterDataset.filter(item => {
+                if (currentFilters.year !== "ALL" && String(item.year).trim() !== String(currentFilters.year).trim()) return false;
+                if (currentFilters.semester !== "ALL" && String(item.semester).trim() !== String(currentFilters.semester).trim()) return false;
+                
+                if (currentFilters.degree !== "ALL") {
+                    const itemDegree = cleanDegreeName(item.degree);
+                    const filterDegree = cleanDegreeName(currentFilters.degree);
+                    if (itemDegree !== filterDegree) return false;
+                }
+                return true;
+            });
+        }
+
+        function updateOverviewKpis() {
+            const filtered = getFilteredData();
+            const uniqueLecturers = new Set(filtered.map(d => d.name)).size;
+
+            let totalDisplay = filtered.length;
+
+            document.getElementById('kpi-total-lecturers').textContent = totalDisplay.toLocaleString();
+            document.getElementById('filter-status-rows').textContent = `${totalDisplay.toLocaleString()} Grand Total`;
+            document.getElementById('filter-status-lecturers').textContent = `${uniqueLecturers.toLocaleString()} อาจารย์ (Unique)`;
+
+            renderOverviewWorkloadTable();
+        }
+
+        function renderOverviewWorkloadTable() {
+            const globalFiltered = getFilteredData();
+            const selectedYear = document.getElementById('overview-table-year-filter') ? document.getElementById('overview-table-year-filter').value : 'ALL';
+            const selectedSem = document.getElementById('overview-table-semester-filter') ? document.getElementById('overview-table-semester-filter').value : 'ALL';
+
+            const tableFiltered = globalFiltered.filter(item => {
+                if (selectedYear !== 'ALL' && String(item.year) !== String(selectedYear)) return false;
+                if (selectedSem !== 'ALL' && String(item.semester) !== String(selectedSem)) return false;
+                return true;
+            });
+
+            const tbody = document.getElementById('overview-table-body');
+            if (tableFiltered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="py-6 text-center text-slate-400">ไม่พบข้อมูลตามปีการศึกษาและภาคเรียนที่เลือก</td></tr>`;
+                document.getElementById('overview-table-badge').textContent = `แสดง 0 จาก 0 รายการ`;
+                return;
+            }
+
+            tbody.innerHTML = tableFiltered.slice(0, 100).map(row => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2.5 px-4 font-bold text-slate-800">${row.year}</td>
+                    <td class="py-2.5 px-4"><span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded font-semibold text-[11px]">${row.semester === 'S' ? 'ภาคฤดูร้อน' : 'ภาค ' + row.semester}</span></td>
+                    <td class="py-2.5 px-4 font-semibold text-slate-700">${row.faculty}</td>
+                    <td class="py-2.5 px-4">${row.major}</td>
+                    <td class="py-2.5 px-4 font-bold text-navy-900">${row.name}</td>
+                    <td class="py-2.5 px-4 text-slate-500">${row.organization}</td>
+                    <td class="py-2.5 px-4"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-medium">${row.degree}</span></td>
+                </tr>
+            `).join('');
+
+            document.getElementById('overview-table-badge').textContent = `แสดง ${Math.min(tableFiltered.length, 100)} จาก ${tableFiltered.length.toLocaleString()} รายการ`;
+        }
+
+        function renderOverviewCharts() {
+            const filtered = getFilteredData();
+
+            const yearList = ["2566", "2567", "2568"];
+            let displayLabels = [];
+            let displayData = [];
+            let displayColors = [];
+
+            if (currentFilters.year === "ALL") {
+                displayLabels = yearList.map(y => `ปีการศึกษา ${y}`);
+                displayData = yearList.map(yr => {
+                    const yrData = filtered.filter(d => String(d.year) === yr);
+                    return new Set(yrData.map(d => d.name)).size;
+                });
+                displayColors = ['#0284c7', '#10b981', '#f59e0b'];
+            } else {
+                displayLabels = [`ปีการศึกษา ${currentFilters.year}`];
+                const yrCount = new Set(filtered.map(d => d.name)).size;
+                displayData = [yrCount];
+                displayColors = [currentFilters.year === '2566' ? '#0284c7' : currentFilters.year === '2567' ? '#10b981' : '#f59e0b'];
+            }
+
+            const ctxYoy = document.getElementById('chart-yoy-trend').getContext('2d');
+            if (chartYoy) chartYoy.destroy();
+            chartYoy = new Chart(ctxYoy, {
+                type: 'bar',
+                data: {
+                    labels: displayLabels,
+                    datasets: [{
+                        label: 'จำนวนอาจารย์พิเศษ (คน - Distinct)',
+                        data: displayData,
+                        backgroundColor: displayColors,
+                        borderRadius: 8,
+                        maxBarThickness: currentFilters.year === "ALL" ? 60 : 90
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const degreeGroup = {};
+            filtered.forEach(d => {
+                const deg = cleanDegreeName(d.degree);
+                degreeGroup[deg] = (degreeGroup[deg] || 0) + 1;
+            });
+
+            const ctxDegree = document.getElementById('chart-degree-pie').getContext('2d');
+            if (chartDegree) chartDegree.destroy();
+            chartDegree = new Chart(ctxDegree, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(degreeGroup),
+                    datasets: [{
+                        data: Object.values(degreeGroup),
+                        backgroundColor: ['#10b981', '#0284c7', '#f59e0b', '#94a3b8'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const val = context.raw;
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : 0;
+                                    return ` ${context.label}: ${val.toLocaleString()} รายการ (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const facultyCountsMap = {};
+            filtered.forEach(d => {
+                const facName = cleanFacultyName(d.faculty);
+                if (facName) {
+                    facultyCountsMap[facName] = (facultyCountsMap[facName] || 0) + 1;
+                }
+            });
+
+            const sortedAllFaculties = Object.entries(facultyCountsMap)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count);
+
+            const colorPalette = [
+                '#0284c7', '#0369a1', '#075985', '#0f172a', '#1e293b',
+                '#334155', '#475569', '#64748b', '#94a3b8', '#cbd5e1'
+            ];
+
+            const ctxFac = document.getElementById('chart-faculty-top10').getContext('2d');
+            if (chartFacultyTop10) chartFacultyTop10.destroy();
+            chartFacultyTop10 = new Chart(ctxFac, {
+                type: 'bar',
+                data: {
+                    labels: sortedAllFaculties.map(f => f.name),
+                    datasets: [{
+                        label: 'Grand Total ภาระงานสอน',
+                        data: sortedAllFaculties.map(f => f.count),
+                        backgroundColor: sortedAllFaculties.map((_, i) => colorPalette[i % colorPalette.length]),
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true } }
+                }
+            });
+
+            const sem1Count = filtered.filter(d => String(d.semester) === '1').length;
+            const sem2Count = filtered.filter(d => String(d.semester) === '2').length;
+            const semSCount = filtered.filter(d => String(d.semester) === 'S').length;
+
+            const ctxSem = document.getElementById('chart-semester-bar').getContext('2d');
+            if (chartSemester) chartSemester.destroy();
+            chartSemester = new Chart(ctxSem, {
+                type: 'pie',
+                data: {
+                    labels: ['ภาคเรียนที่ 1', 'ภาคเรียนที่ 2', 'ภาคฤดูร้อน (Summer)'],
+                    datasets: [{
+                        data: [sem1Count, sem2Count, semSCount],
+                        backgroundColor: ['#6366f1', '#ec4899', '#06b6d4'],
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        function populateFacultyDropdown() {
+            const select = document.getElementById('faculty-dropdown-select');
+            
+            const uniqueFaculties = Array.from(new Set(masterDataset.map(d => cleanFacultyName(d.faculty)))).filter(Boolean).sort();
+
+            let optionsHtml = '<option value="ALL">ทั้งหมด (ทุกคณะวิชา)</option>';
+            optionsHtml += uniqueFaculties.map(f => `<option value="${f}">${f}</option>`).join('');
+
+            select.innerHTML = optionsHtml;
+            
+            select.addEventListener('change', () => {
+                updateFacultyMajorsDropdown();
+                updateFacultyTab();
+            });
+
+            document.getElementById('fac-semester-select').addEventListener('change', updateFacultyTab);
+            document.getElementById('fac-major-select').addEventListener('change', updateFacultyTab);
+            document.getElementById('fac-table-search').addEventListener('input', filterFacultyLecturerTable);
+
+            updateFacultyMajorsDropdown();
+        }
+
+        function updateFacultyMajorsDropdown() {
+            const selectedFaculty = document.getElementById('faculty-dropdown-select').value;
+            let facData = masterDataset;
+            if (selectedFaculty !== "ALL") {
+                facData = masterDataset.filter(d => cleanFacultyName(d.faculty) === selectedFaculty);
+            }
+            
+            const majors = Array.from(new Set(facData.map(d => d.major))).filter(Boolean).sort();
+            
+            const majorSelect = document.getElementById('fac-major-select');
+            majorSelect.innerHTML = '<option value="ALL">ทุกสาขาวิชาในคณะ</option>' + 
+                majors.map(m => `<option value="${m}">${m}</option>`).join('');
+        }
+
+        function updateFacultyTab() {
+            const selectedFaculty = document.getElementById('faculty-dropdown-select').value;
+            const selectedSemester = document.getElementById('fac-semester-select').value;
+            const selectedMajor = document.getElementById('fac-major-select').value;
+
+            let filtered = masterDataset;
+
+            if (selectedFaculty !== "ALL") {
+                filtered = filtered.filter(d => cleanFacultyName(d.faculty) === selectedFaculty);
+            }
+            if (currentFilters.year !== "ALL") {
+                filtered = filtered.filter(d => String(d.year) === String(currentFilters.year));
+            }
+            if (selectedSemester !== "ALL") {
+                filtered = filtered.filter(d => String(d.semester) === String(selectedSemester));
+            }
+            if (selectedMajor !== "ALL") {
+                filtered = filtered.filter(d => String(d.major) === String(selectedMajor));
+            }
+
+            const uniqueLecturers = new Set(filtered.map(d => d.name)).size;
+            const uniqueMajors = new Set(filtered.map(d => d.major)).size;
+            const uniqueCourses = new Set(filtered.map(d => d.courseCode || d.courseName)).size;
+            const uniqueOrgs = new Set(filtered.map(d => d.organization).filter(o => o && o !== 'ไม่พบข้อมูล')).size;
+
+            document.getElementById('faculty-kpi-lecturers').textContent = uniqueLecturers.toLocaleString();
+            document.getElementById('faculty-kpi-majors').textContent = `${uniqueMajors} สาขา`;
+            document.getElementById('faculty-kpi-courses').textContent = `${uniqueCourses} วิชา`;
+            document.getElementById('faculty-kpi-orgs').textContent = `${uniqueOrgs} สังกัด`;
+
+            const majorGroup = {};
+            filtered.forEach(d => {
+                if (d.major) majorGroup[d.major] = (majorGroup[d.major] || 0) + 1;
+            });
+
+            const ctxMajor = document.getElementById('chart-faculty-major').getContext('2d');
+            if (chartFacultyMajor) chartFacultyMajor.destroy();
+            chartFacultyMajor = new Chart(ctxMajor, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(majorGroup),
+                    datasets: [{
+                        label: 'ภาระงานสอน (รายการ)',
+                        data: Object.values(majorGroup),
+                        backgroundColor: '#0284c7',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const yearList = ["2566", "2567", "2568"];
+            const yoyData = yearList.map(yr => {
+                const yrLecturers = masterDataset.filter(d => {
+                    const matchFac = (selectedFaculty === "ALL") || (cleanFacultyName(d.faculty) === selectedFaculty);
+                    return matchFac && String(d.year) === String(yr);
+                });
+                return new Set(yrLecturers.map(d => d.name)).size;
+            });
+
+            const ctxFacYoy = document.getElementById('chart-faculty-yoy').getContext('2d');
+            if (chartFacultyYoy) chartFacultyYoy.destroy();
+            chartFacultyYoy = new Chart(ctxFacYoy, {
+                type: 'line',
+                data: {
+                    labels: yearList.map(y => `ปี ${y}`),
+                    datasets: [{
+                        label: 'จำนวนอาจารย์พิเศษ (คน - Distinct)',
+                        data: yoyData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: 6,
+                        pointHoverRadius: 9,
+                        pointBackgroundColor: '#059669'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { 
+                        y: { 
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        } 
+                    }
+                }
+            });
+
+            const courseGroup = {};
+            filtered.forEach(d => {
+                const key = `${d.courseCode || '-'}||${d.courseName || '-'}`;
+                if (!courseGroup[key]) courseGroup[key] = new Set();
+                courseGroup[key].add(d.name);
+            });
+
+            const sortedCourses = Object.entries(courseGroup)
+                .map(([k, set]) => {
+                    const [code, name] = k.split('||');
+                    return { code, name, count: set.size };
+                })
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5);
+
+            document.getElementById('faculty-top-courses-body').innerHTML = sortedCourses.map(c => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2 px-3 font-bold text-sky-700">${c.code}</td>
+                    <td class="py-2 px-3 font-medium text-slate-800">${c.name}</td>
+                    <td class="py-2 px-3 text-center font-bold text-emerald-600">${c.count} คน</td>
+                </tr>
+            `).join('') || `<tr><td colspan="3" class="text-center py-4 text-slate-400">ไม่พบข้อมูลรายวิชา</td></tr>`;
+
+            const orgGroup = {};
+            filtered.forEach(d => {
+                const org = d.organization || 'ไม่พบข้อมูล';
+                if (org !== 'ไม่พบข้อมูล' && org !== 'ประกอบอาชีพอิสระ') {
+                    orgGroup[org] = (orgGroup[org] || 0) + 1;
+                }
+            });
+
+            const sortedOrgs = Object.entries(orgGroup)
+                .map(([name, count]) => ({ name, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 5);
+
+            document.getElementById('faculty-top-orgs-body').innerHTML = sortedOrgs.map(o => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2 px-3 font-medium text-slate-800">${o.name}</td>
+                    <td class="py-2 px-3 text-center font-bold text-sky-600">${o.count}</td>
+                </tr>
+            `).join('') || `<tr><td colspan="2" class="text-center py-4 text-slate-400">ไม่พบข้อมูลองค์กรภายนอก</td></tr>`;
+
+            renderFacultyLecturerTable(filtered);
+        }
+
+        function renderFacultyLecturerTable(filteredData) {
+            const tbody = document.getElementById('faculty-lecturer-table-body');
+            
+            const lecturerMap = {};
+            filteredData.forEach(item => {
+                if (!lecturerMap[item.name]) {
+                    lecturerMap[item.name] = {
+                        name: item.name,
+                        major: item.major,
+                        degree: item.degree,
+                        org: item.organization,
+                        courseCode: item.courseCode || '-',
+                        courseName: item.courseName || '-',
+                        credits: item.credits || '-'
+                    };
+                }
+            });
+
+            const list = Object.values(lecturerMap);
+
+            if (list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">ไม่พบข้อมูลอาจารย์ผู้สอนประจำคณะตามเงื่อนไขที่เลือก</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = list.map(item => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2.5 px-4 font-bold text-navy-900">${item.name}</td>
+                    <td class="py-2.5 px-4 text-slate-700">${item.major}</td>
+                    <td class="py-2.5 px-4"><span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded font-semibold text-[11px]">${item.degree}</span></td>
+                    <td class="py-2.5 px-4 text-slate-500">${item.org}</td>
+                    <td class="py-2.5 px-4">
+                        <span class="font-bold text-sky-600 mr-1.5">[${item.courseCode}]</span>
+                        <span class="font-medium text-slate-800">${item.courseName}</span>
+                    </td>
+                    <td class="py-2.5 px-4 text-center">
+                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded font-bold text-xs border border-emerald-200">${item.credits}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function filterFacultyLecturerTable() {
+            const query = document.getElementById('fac-table-search').value.toLowerCase();
+            const rows = document.querySelectorAll('#faculty-lecturer-table-body tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function initSearchEngine() {
+            const input = document.getElementById('lecturer-search-input');
+            const clearBtn = document.getElementById('btn-clear-search');
+            const yearFilter = document.getElementById('lecturer-year-filter');
+            const semesterFilter = document.getElementById('lecturer-semester-filter');
+
+            input.addEventListener('input', (e) => {
+                const query = e.target.value.trim().toLowerCase();
+                if (query.length === 0) {
+                    resetLecturerSearch();
+                    return;
+                }
+                executeLecturerSearch(query);
+            });
+
+            clearBtn.addEventListener('click', () => {
+                input.value = '';
+                resetLecturerSearch();
+            });
+
+            yearFilter.addEventListener('change', filterLecturerTableHistory);
+            semesterFilter.addEventListener('change', filterLecturerTableHistory);
+        }
+
+        function executeLecturerSearch(query) {
+            currentMatchedLecturerData = masterDataset.filter(d => d.name.toLowerCase().includes(query));
+            const profileCard = document.getElementById('lecturer-profile-card');
+            const yearFilter = document.getElementById('lecturer-year-filter');
+
+            if (currentMatchedLecturerData.length === 0) {
+                profileCard.classList.add('hidden');
+                resetLecturerSearch();
+                return;
+            }
+
+            const sample = currentMatchedLecturerData[0];
+            profileCard.classList.remove('hidden');
+            document.getElementById('profile-avatar-initial').textContent = sample.name.replace("อ.", "").replace("ดร.", "").replace("ผศ.", "").trim().charAt(0);
+            document.getElementById('profile-name').textContent = sample.name;
+            document.getElementById('profile-degree-badge').textContent = sample.degree;
+            document.getElementById('profile-org').innerHTML = `<i class="fa-solid fa-building-user mr-1.5"></i>สังกัด: ${sample.organization}`;
+            document.getElementById('profile-total-courses').textContent = `${currentMatchedLecturerData.length} รายการ`;
+            
+            const facultiesTaught = new Set(currentMatchedLecturerData.map(m => m.faculty)).size;
+            document.getElementById('profile-faculties-count').textContent = `${facultiesTaught} คณะ`;
+
+            const availableYears = Array.from(new Set(currentMatchedLecturerData.map(m => String(m.year)))).sort();
+            yearFilter.innerHTML = '<option value="ALL">ทุกปีการศึกษา</option>' + 
+                availableYears.map(y => `<option value="${y}">ปี ${y}</option>`).join('');
+
+            const yearList = ["2566", "2567", "2568"];
+            const yearCounts = yearList.map(yr => currentMatchedLecturerData.filter(m => String(m.year) === String(yr)).length);
+
+            const ctxLecturerTrend = document.getElementById('chart-lecturer-trend').getContext('2d');
+            if (chartLecturerTrend) chartLecturerTrend.destroy();
+            chartLecturerTrend = new Chart(ctxLecturerTrend, {
+                type: 'bar',
+                data: {
+                    labels: yearList.map(y => `ปี ${y}`),
+                    datasets: [{
+                        label: 'จำนวนภาระงาน (วิชา)',
+                        data: yearCounts,
+                        backgroundColor: ['#0284c7', '#10b981', '#f59e0b'],
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { 
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { precision: 0 } 
+                        } 
+                    }
+                }
+            });
+
+            filterLecturerTableHistory();
+        }
+
+        function filterLecturerTableHistory() {
+            if (currentMatchedLecturerData.length === 0) return;
+
+            const selectedYear = document.getElementById('lecturer-year-filter').value;
+            const selectedSem = document.getElementById('lecturer-semester-filter').value;
+            const tbody = document.getElementById('lecturer-search-table-body');
+            const countBadge = document.getElementById('search-result-count');
+
+            let filteredHistory = currentMatchedLecturerData.filter(item => {
+                if (selectedYear !== 'ALL' && String(item.year) !== String(selectedYear)) return false;
+                if (selectedSem !== 'ALL' && String(item.semester) !== String(selectedSem)) return false;
+                return true;
+            });
+
+            countBadge.textContent = `พบ ${filteredHistory.length} รายการภาระงาน`;
+
+            if (filteredHistory.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">
+                            <p>ไม่พบประวัติการสอนในภาคเรียน/ปีการศึกษาที่เลือก</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = filteredHistory.map(row => `
+                <tr class="hover:bg-slate-50 transition">
+                    <td class="py-2.5 px-4 font-bold text-navy-900">${row.year}</td>
+                    <td class="py-2.5 px-4"><span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded font-semibold text-[11px]">${row.semester === 'S' ? 'ภาคฤดูร้อน' : 'ภาค ' + row.semester}</span></td>
+                    <td class="py-2.5 px-4 font-semibold text-slate-700">${row.faculty}</td>
+                    <td class="py-2.5 px-4">${row.major}</td>
+                    <td class="py-2.5 px-4">
+                        <span class="font-bold text-sky-600 mr-1.5">[${row.courseCode || '-'}]</span>
+                        <span class="font-medium text-slate-800">${row.courseName || '-'}</span>
+                    </td>
+                    <td class="py-2.5 px-4 text-center">
+                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded font-bold text-xs border border-emerald-200">${row.credits || '-'}</span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function resetLecturerSearch() {
+            currentMatchedLecturerData = [];
+            document.getElementById('lecturer-profile-card').classList.add('hidden');
+            document.getElementById('search-result-count').textContent = 'พบ 0 รายการ';
+            document.getElementById('lecturer-year-filter').innerHTML = '<option value="ALL">ทุกปีการศึกษา</option>';
+            document.getElementById('lecturer-semester-filter').value = 'ALL';
+            document.getElementById('lecturer-search-table-body').innerHTML = `
+                <tr>
+                    <td colspan="6" class="py-8 text-center text-slate-400">
+                        <i class="fa-solid fa-user-check text-3xl mb-2 text-slate-300"></i>
+                        <p>กรุณากรอกชื่ออาจารย์ในช่องค้นหาด้านบน เพื่อเรียกดูประวัติการสอน</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function initExcelUpload() {
+            const uploadBtn = document.getElementById('btn-upload-excel');
+            const fileInput = document.getElementById('excel-file-input');
+
+            uploadBtn.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    try {
+                        const data = new Uint8Array(evt.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        
+                        let sheetName = workbook.SheetNames.includes("ข้อมูลอาจารย์ 3 ปี") 
+                            ? "ข้อมูลอาจารย์ 3 ปี" 
+                            : workbook.SheetNames[0];
+                        
+                        const sheet = workbook.Sheets[sheetName];
+                        const rawData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                        if (rawData.length < 2) {
+                            alert("ไม่พบข้อมูลในไฟล์ Excel");
+                            return;
+                        }
+
+                        let headerRowIndex = 0;
+                        for (let i = 0; i < Math.min(rawData.length, 5); i++) {
+                            const rowStr = JSON.stringify(rawData[i]);
+                            if (rowStr.includes("คณะ") || rowStr.includes("ชื่อ-สกุล") || rowStr.includes("รหัสวิชา")) {
+                                headerRowIndex = i;
+                                break;
+                            }
+                        }
+
+                        const rawRows = XLSX.utils.sheet_to_json(sheet, { range: headerRowIndex });
+
+                        let parsedData = [];
+
+                        rawRows.forEach((row, idx) => {
+                            const faculty = row['คณะ/วิทยาลัย'] || row['คณะ'] || row['faculty'] || '';
+                            const major = row['สาขาวิชา'] || row['major'] || '';
+                            const degree = row['คุณวุฒิ'] || row['ระดับ'] || row['degree'] || '';
+                            const rawSemester = String(row['ภาคการศึกษา'] || row['ภาคเรียน'] || row['semester'] || '').trim();
+                            const name = row['ชื่อ-สกุล'] || row['ชื่ออาจารย์'] || row['name'] || '';
+                            const courseCode = row['รหัสวิชา'] || row['courseCode'] || '';
+                            const courseName = row['ชื่อวิชา'] || row['courseName'] || '';
+                            const credits = row['หน่วยกิต'] || row['credits'] || '';
+                            
+                            const organization = row['ชื่อหน่วยงาน / บริษัท / องค์กรสังกัดของอาจารย์พิเศษ (ถ้ามี)'] || 
+                                                 row['ชื่อหน่วยงาน / บริษัท / องค์กรสังกัดของอาจารย์พิเศษ'] || 
+                                                 row['หน่วยงานสังกัด'] || row['สังกัด'] || row['organization'] || 'ไม่พบข้อมูล';
+
+                            let year = '2568';
+                            let semester = '1';
+
+                            if (rawSemester.includes('S/') || rawSemester.includes('s/')) {
+                                semester = 'S';
+                                year = rawSemester.split('/')[1] || '2568';
+                            } else if (rawSemester.includes('256')) {
+                                const yrMatch = rawSemester.match(/256\d/);
+                                if (yrMatch) year = yrMatch[0];
+                                
+                                if (rawSemester.includes('-01-')) semester = '1';
+                                else if (rawSemester.includes('-02-')) semester = '2';
+                            } else if (rawSemester === '1' || rawSemester === '2' || rawSemester === 'S') {
+                                semester = rawSemester;
+                            }
+
+                            if (name && name !== 'ชื่อ-สกุล') {
+                                parsedData.push({
+                                    id: idx + 1,
+                                    year: String(year).trim(),
+                                    semester: String(semester).trim(),
+                                    faculty: cleanFacultyName(faculty),
+                                    major: String(major).trim(),
+                                    courseCode: String(courseCode).trim(),
+                                    courseName: String(courseName).trim(),
+                                    credits: String(credits).trim(),
+                                    degree: cleanDegreeName(degree),
+                                    name: String(name).trim(),
+                                    organization: String(organization).trim()
+                                });
+                            }
+                        });
+
+                        if (parsedData.length > 0) {
+                            masterDataset = parsedData;
+                            populateFacultyDropdown();
+                            refreshAllViews();
+                            alert(`นำเข้าข้อมูลเรียบร้อยแล้ว จำนวน ${parsedData.length.toLocaleString()} รายการ`);
+                        } else {
+                            alert("ไม่สามารถอ่านข้อมูลจากไฟล์ได้ กรุณาตรวจสอบโครงสร้างไฟล์ Excel");
+                        }
+                    } catch (err) {
+                        alert("เกิดข้อผิดพลาดในการอ่านไฟล์ Excel");
+                        console.error(err);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function initTabNavigation() {
+            const tabs = document.querySelectorAll('.nav-tab');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.getAttribute('data-tab');
+
+                    tabs.forEach(t => {
+                        t.classList.remove('active', 'border-sky-400', 'text-sky-400');
+                        t.classList.add('border-transparent', 'text-slate-400');
+                    });
+                    tab.classList.add('active', 'border-sky-400', 'text-sky-400');
+                    tab.classList.remove('border-transparent', 'text-slate-400');
+
+                    contents.forEach(c => {
+                        if (c.id === target) {
+                            c.classList.remove('hidden');
+                            c.classList.add('block');
+                        } else {
+                            c.classList.add('hidden');
+                            c.classList.remove('block');
+                        }
+                    });
+
+                    if (target === 'tab-faculty') {
+                        updateFacultyMajorsDropdown();
+                        updateFacultyTab();
+                    }
+                    if (target === 'tab-overview') renderOverviewCharts();
+                });
+            });
+        }
+
+        function initGlobalFilters() {
+            const yearBtns = document.querySelectorAll('.year-filter-btn');
+            yearBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    yearBtns.forEach(b => {
+                        b.classList.remove('active', 'bg-navy-900', 'text-white');
+                        b.classList.add('text-slate-600');
+                    });
+                    btn.classList.add('active', 'bg-navy-900', 'text-white');
+                    btn.classList.remove('text-slate-600');
+
+                    currentFilters.year = btn.getAttribute('data-year');
+                    refreshAllViews();
+                });
+            });
+
+            document.getElementById('global-semester-filter').addEventListener('change', (e) => {
+                currentFilters.semester = e.target.value;
+                refreshAllViews();
+            });
+
+            document.getElementById('global-degree-filter').addEventListener('change', (e) => {
+                currentFilters.degree = e.target.value;
+                refreshAllViews();
+            });
+
+            document.getElementById('overview-table-year-filter').addEventListener('change', renderOverviewWorkloadTable);
+            document.getElementById('overview-table-semester-filter').addEventListener('change', renderOverviewWorkloadTable);
+        }
+
+        function refreshAllViews() {
+            updateOverviewKpis();
+            renderOverviewCharts();
+            updateFacultyTab();
+        }
+
+        function initModalAndActions() {
+            const modal = document.getElementById('presentation-modal');
+            const openBtn = document.getElementById('btn-presentation-mode');
+            const closeBtn = document.getElementById('btn-close-presentation');
+            const exportCsvBtn = document.getElementById('btn-export-csv');
+
+            openBtn.addEventListener('click', () => modal.classList.remove('hidden'));
+            closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.classList.add('hidden');
+            });
+
+            exportCsvBtn.addEventListener('click', () => {
+                const filtered = getFilteredData();
+                if (filtered.length === 0) {
+                    alert("ไม่มีข้อมูลสำหรับส่งออก");
+                    return;
+                }
+                let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+                csvContent += "ปีการศึกษา,ภาคการศึกษา,คณะ/วิทยาลัย,สาขาวิชา,รหัสวิชา,ชื่อวิชา,หน่วยกิต,ระดับคุณวุฒิ,ชื่อ-สกุล,หน่วยงานสังกัด\n";
+
+                filtered.forEach(row => {
+                    csvContent += `"${row.year}","${row.semester}","${row.faculty}","${row.major}","${row.courseCode}","${row.courseName}","${row.credits || ''}","${row.degree}","${row.name}","${row.organization}"\n`;
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ (2566 - 2568)_${currentFilters.year}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initTabNavigation();
+            initGlobalFilters();
+            populateFacultyDropdown();
+            initSearchEngine();
+            initExcelUpload();
+            initModalAndActions();
+
+            refreshAllViews();
+        });
+    </script>
+</body>
+</html>
