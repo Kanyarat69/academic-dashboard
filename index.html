@@ -363,6 +363,11 @@
                         </h3>
                         <p class="text-xs text-slate-300 mt-1 pl-11">นับจำนวนอาจารย์แบบไม่ซ้ำคน (Distinct Headcount) แยกรายคณะตามระดับคุณวุฒิการศึกษา</p>
                     </div>
+
+                    <!-- ปุ่ม Export สรุปรายคณะ -->
+                    <button onclick="exportFacultyDegreeExcel()" class="flex items-center px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition whitespace-nowrap self-start sm:self-center">
+                        <i class="fa-solid fa-file-excel mr-2 text-sm"></i> ส่งออก Excel สรุปรายคณะ/คุณวุฒิ
+                    </button>
                 </div>
                 
                 <div class="overflow-x-auto max-h-[500px] custom-scrollbar">
@@ -745,6 +750,103 @@
             const filename = degreeType === 'ALL' 
                 ? `รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ_ทั้งหมด.xlsx` 
                 : `รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ_ระดับ${degreeType}.xlsx`;
+
+            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        // ฟังก์ชัน Export สรุปจำนวนอาจารย์พิเศษจำแนกตามรายคณะและระดับคุณวุฒิ
+        function exportFacultyDegreeExcel() {
+            const selectedFaculty = document.getElementById('faculty-dropdown-select').value;
+            const selectedSemester = document.getElementById('fac-semester-select').value;
+            const selectedTeachingLevel = document.getElementById('fac-teaching-level-select').value;
+            const selectedMajor = document.getElementById('fac-major-select').value;
+
+            // กรองข้อมูลตามเงื่อนไขที่เลือกในแท็บวิเคราะห์รายคณะ
+            let filtered = masterDataset;
+            if (selectedFaculty !== "ALL") filtered = filtered.filter(d => cleanFacultyName(d.faculty) === selectedFaculty);
+            if (currentFilters.year !== "ALL") filtered = filtered.filter(d => String(d.year).trim() === String(currentFilters.year).trim());
+            if (selectedSemester !== "ALL") filtered = filtered.filter(d => normalizeSemester(d.semester) === normalizeSemester(selectedSemester));
+            if (selectedTeachingLevel !== "ALL") filtered = filtered.filter(d => cleanDegreeName(d.degree) === cleanDegreeName(selectedTeachingLevel));
+            if (selectedMajor !== "ALL") filtered = filtered.filter(d => String(d.major) === String(selectedMajor));
+
+            if (filtered.length === 0) {
+                alert("ไม่พบข้อมูลสำหรับส่งออกตามเงื่อนไขที่เลือก");
+                return;
+            }
+
+            // จัดกลุ่มตามคณะ
+            const facultyMap = {};
+            filtered.forEach(item => {
+                const fac = cleanFacultyName(item.faculty);
+                if (!facultyMap[fac]) facultyMap[fac] = [];
+                facultyMap[fac].push(item);
+            });
+
+            const excelRows = [];
+            let totalBachSum = 0, totalMastSum = 0, totalDocSum = 0, totalOtherSum = 0, grandTotalSum = 0;
+
+            Object.keys(facultyMap).sort().forEach((facName, index) => {
+                const facRows = facultyMap[facName];
+                const bachCount = getUniqueLecturers(facRows.filter(r => cleanDegreeName(r.degree) === 'ปริญญาตรี')).length;
+                const mastCount = getUniqueLecturers(facRows.filter(r => cleanDegreeName(r.degree) === 'ปริญญาโท')).length;
+                const docCount = getUniqueLecturers(facRows.filter(r => cleanDegreeName(r.degree) === 'ปริญญาเอก')).length;
+                const otherCount = getUniqueLecturers(facRows.filter(r => cleanDegreeName(r.degree) === 'อ.พิเศษเก่า (ไม่ระบุคุณวุฒิ)')).length;
+                const totalFacCount = getUniqueLecturers(facRows).length;
+
+                excelRows.push({
+                    "ลำดับ": index + 1,
+                    "คณะ / วิทยาลัย": facName,
+                    "ปริญญาตรี (คน)": bachCount,
+                    "ปริญญาโท (คน)": mastCount,
+                    "ปริญญาเอก (คน)": docCount,
+                    "อ.พิเศษเก่า/ไม่ระบุคุณวุฒิ (คน)": otherCount,
+                    "รวมจำนวนอาจารย์พิเศษ (คน - ไม่ซ้ำคน)": totalFacCount
+                });
+
+                totalBachSum += bachCount;
+                totalMastSum += mastCount;
+                totalDocSum += docCount;
+                totalOtherSum += otherCount;
+                grandTotalSum += totalFacCount;
+            });
+
+            // เพิ่มแถวสรุปรวมทั้งหมด
+            excelRows.push({
+                "ลำดับ": "",
+                "คณะ / วิทยาลัย": `รวมทั้งสิ้น (${Object.keys(facultyMap).length} คณะ)`,
+                "ปริญญาตรี (คน)": totalBachSum,
+                "ปริญญาโท (คน)": totalMastSum,
+                "ปริญญาเอก (คน)": totalDocSum,
+                "อ.พิเศษเก่า/ไม่ระบุคุณวุฒิ (คน)": totalOtherSum,
+                "รวมจำนวนอาจารย์พิเศษ (คน - ไม่ซ้ำคน)": grandTotalSum
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(excelRows);
+            worksheet['!cols'] = [
+                { wch: 8 },
+                { wch: 35 },
+                { wch: 18 },
+                { wch: 18 },
+                { wch: 18 },
+                { wch: 30 },
+                { wch: 36 }
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "สรุปตามคณะและคุณวุฒิ");
+
+            const facLabel = selectedFaculty === 'ALL' ? 'ทุกคณะ' : selectedFaculty;
+            const semLabel = selectedSemester === 'ALL' ? 'ทุกภาคเรียน' : `ภาค${selectedSemester}`;
+            const filename = `สรุปจำนวนอาจารย์พิเศษจำแนกตามคณะและคุณวุฒิ_${facLabel}_ปี${currentFilters.year}_${semLabel}.xlsx`;
 
             const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
             const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
@@ -1593,7 +1695,6 @@
                             const rawYearStr = String(rawYearValue || '').trim();
                             const rawSemStr = String(rawSemesterValue || '').trim();
 
-                            // สกัดข้อมูลภาคเรียนและปีการศึกษาจากรูปแบบ เช่น "1/2566" หรือ "S/2566"
                             const combinedSemYearStr = `${rawSemStr} ${rawYearStr}`.trim();
                             const slashMatch = combinedSemYearStr.match(/([123sSฤดูร้อน]+)\s*[\/\-]\s*(25\d{2}|20\d{2})/);
 
