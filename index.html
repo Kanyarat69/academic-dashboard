@@ -1672,7 +1672,7 @@
                     ? `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md font-bold text-xs border border-amber-300 inline-block">วิชาเรียนร่วม</span>`
                     : `<span class="px-2.5 py-1 bg-sky-100 text-sky-800 rounded-md font-bold text-xs border border-sky-300 inline-block">วิชาปกติ</span>`;
 
-                const noteDisplay = row.note ? row.note.replace(/\n/g, '<br>') : '-';
+                const noteDisplay = (row.note && row.note.trim() !== '') ? row.note.replace(/\n/g, '<br>') : '';
 
                 let teacherDisplay = `<div class="font-bold text-slate-800">${row.name}</div>`;
                 if (row.teachingRole === 'อาจารย์ร่วมสอน') {
@@ -2025,7 +2025,7 @@
                             fileTitleText += ' ' + rawData[r].join(' ');
                         }
 
-                        let extractedFaculty = '';
+                        let extractedFaculty = 'นำเข้าข้อมูลรายคณะ';
                         if (fileTitleText.includes('')) extractedFaculty = '';
                         
                         let extractedSemester = '2/2568';
@@ -2084,18 +2084,15 @@
                                 let dayRaw = '-';
                                 let timeRaw = '-';
 
-                                // ตรวจสอบว่า val7 เป็นรูปแบบหน่วยกิต หรือเป็นคำว่า 'NA' หรือไม่
                                 const isVal7CreditPattern = /^\d+\(\d+[\-\d]*\)$/.test(val7) || val7.includes('(') || val7.toUpperCase() === 'NA';
 
                                 if (isVal7CreditPattern) {
-                                    // หาก val7 คือ หน่วยกิต หรือ NA แสดงว่าไม่มีคอลัมน์ชื่อวิชาใน Excel
                                     courseNameRaw = '-';
                                     creditsRaw = (val7 && val7 !== '-' && val7 !== '') ? val7 : 'NA';
                                     sectionRaw = (val8 && val8 !== 'NA' && val8 !== '') ? val8 : '-';
                                     dayRaw = (val9 && val9 !== '') ? val9 : '-';
                                     timeRaw = (val10 && val10 !== '') ? val10 : '-';
                                 } else {
-                                    // มีคอลัมน์ชื่อวิชา
                                     courseNameRaw = (val7 && val7 !== 'NA' && val7 !== 'NaN' && val7 !== '') ? val7 : '-';
                                     creditsRaw = (val8 && val8 !== '-' && val8 !== '') ? val8 : 'NA';
                                     sectionRaw = (val9 && val9 !== 'NA' && val9 !== '') ? val9 : '-';
@@ -2103,13 +2100,14 @@
                                     timeRaw = (val11 && val11 !== '') ? val11 : '-';
                                 }
 
-                                // ดึงหมายเหตุจากคอลัมน์ฝั่งขวาสุด
+                                // ดึงหมายเหตุโดยอิงจากคอลัมน์หมายเหตุ (ดึงเฉพาะคอลัมน์ Index 13 หรือขวาสุดที่ไม่ใช่ตัวเลข)
+                                // หากคอลัมน์หมายเหตุว่างเปล่า จะกำหนดให้เป็นค่าว่าง "" (ไม่ดึงตัวเลขค่าตอบแทน หรือข้อมูลคอลัมน์อื่นมาใส่)
                                 let noteRaw = '';
-                                for (let c = row.length - 1; c >= 12; c--) {
-                                    const text = String(row[c] || '').trim();
-                                    if (text !== '') {
+                                const noteIndex = 13; // ดึงโดยตรงจากคอลัมน์หมายเหตุ
+                                if (row.length > noteIndex) {
+                                    const text = String(row[noteIndex] || '').trim();
+                                    if (text !== '' && isNaN(Number(text))) {
                                         noteRaw = text;
-                                        break;
                                     }
                                 }
 
@@ -2135,7 +2133,7 @@
                                     coTeacherSlots: coTeacherParsed.slots,
                                     coTeacherCredits: coTeacherParsed.credits,
                                     teachingRole: 'อาจารย์ผู้สอนหลัก',
-                                    note: noteRaw
+                                    note: noteRaw || ''
                                 });
 
                                 // 2. บันทึก Record อาจารย์ร่วมสอน
@@ -2158,7 +2156,7 @@
                                         coTeacherSlots: coTeacherParsed.slots,
                                         coTeacherCredits: coTeacherParsed.credits,
                                         teachingRole: 'อาจารย์ร่วมสอน',
-                                        note: `ร่วมสอนกับ ${currentLecturer.name} จำนวน ${coTeacherParsed.slots} ครั้งสอน = ${coTeacherParsed.credits} นก.`
+                                        note: noteRaw ? `ร่วมสอนกับ ${currentLecturer.name} จำนวน ${coTeacherParsed.slots} ครั้งสอน = ${coTeacherParsed.credits} นก.` : ''
                                     });
                                 }
                             }
