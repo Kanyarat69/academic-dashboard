@@ -76,13 +76,11 @@
                 </div>
 
                 <div class="flex items-center space-x-2">
-                    <!-- ชุดนำเข้า Excel 1: อาจารย์พิเศษ -->
                     <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" class="hidden">
                     <button id="btn-upload-excel" class="flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-sky-600 hover:bg-sky-500 text-white shadow-md transition" title="นำเข้าข้อมูลอาจารย์พิเศษ 3 ปีย้อนหลัง">
                         <i class="fa-solid fa-file-excel mr-1.5"></i> นำเข้า อ.พิเศษ
                     </button>
                     
-                    <!-- ชุดนำเข้า Excel 2: ข้อมูลประมาณการพันธกิจ -->
                     <input type="file" id="mission-excel-file-input" accept=".xlsx, .xls" class="hidden">
                     <button id="btn-upload-mission-excel" class="flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg bg-purple-600 hover:bg-purple-500 text-white shadow-md transition" title="นำเข้าตารางพันธกิจและประมาณการค่าสอน">
                         <i class="fa-solid fa-file-invoice-dollar mr-1.5"></i> นำเข้า ประมาณการพันธกิจ
@@ -485,13 +483,13 @@
                         <i class="fa-solid fa-id-card text-2xl"></i>
                     </div>
                     <h2 class="text-xl font-bold text-navy-900">ค้นหาประวัติภาระงานสอนอาจารย์พิเศษ และประมาณการพันธกิจรายบุคคล</h2>
-                    <p class="text-xs text-slate-500">พิมพ์ชื่อ นามสกุล หรือรหัสวิชา/ชื่อวิชา เพื่อเรียกดูข้อมูลจากทั้ง 2 ไฟล์ Excel</p>
+                    <p class="text-xs text-slate-500">พิมพ์ชื่อ นามสกุล หรือรหัสวิชา/ชื่อวิชา เพื่อเรียกดูข้อมูลจากทั้ง 2 ไฟล์ Excel (รองรับการค้นชื่ออาจารย์ร่วมสอน)</p>
                     
                     <div class="relative max-w-xl mx-auto">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <i class="fa-solid fa-magnifying-glass text-lg"></i>
                         </div>
-                        <input type="text" id="lecturer-search-input" class="w-full pl-11 pr-24 py-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:bg-white transition shadow-sm" placeholder="พิมพ์ชื่ออาจารย์ เช่น 'ฐิตาภรณ์', 'กฤษณ์', 'นันทวุฒิ' หรือรหัสวิชา...">
+                        <input type="text" id="lecturer-search-input" class="w-full pl-11 pr-24 py-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:bg-white transition shadow-sm" placeholder="พิมพ์ชื่ออาจารย์ เช่น 'ถวิลย์', 'เอกพงษ์', 'ฐิตาภรณ์' หรือรหัสวิชา...">
                         <button id="btn-clear-search" class="absolute right-2 top-2 px-3 py-1.5 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition font-bold">ล้างค่า</button>
                     </div>
                 </div>
@@ -548,7 +546,7 @@
                 </div>
             </div>
 
-            <!-- SECTION: ตารางสรุปพันธกิจและประมาณการค่าสอน (NEW SECTION) -->
+            <!-- SECTION: ตารางสรุปพันธกิจและประมาณการค่าสอน -->
             <div id="mission-report-card" class="bg-white rounded-2xl shadow-sm border border-purple-200 overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-purple-900 to-navy-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
@@ -556,7 +554,7 @@
                             <i class="fa-solid fa-file-invoice-dollar text-purple-400 mr-2 text-lg"></i>
                             สรุปพันธกิจและประมาณการค่าสอน (จากไฟล์ประมาณการ)
                         </h3>
-                        <p class="text-xs text-purple-200 mt-0.5">จำแนกประเภทวิชาเรียนร่วม / วิชาปกติ พร้อมสรุปพันธกิจ</p>
+                        <p class="text-xs text-purple-200 mt-0.5">จำแนกประเภทวิชาเรียนร่วม / วิชาปกติ พร้อมสรุปอาจารย์หลักและอาจารย์ร่วมสอน</p>
                     </div>
 
                     <div class="flex items-center space-x-2">
@@ -575,16 +573,17 @@
                             <tr>
                                 <th class="py-3.5 px-4 text-center whitespace-nowrap w-14">ลำดับ</th>
                                 <th class="py-3.5 px-4 whitespace-nowrap font-extrabold text-purple-950">รหัสวิชา</th>
-                                <th class="py-3.5 px-4 min-w-[240px]">ชื่อวิชา</th>
+                                <th class="py-3.5 px-4 min-w-[220px]">ชื่อวิชา</th>
                                 <th class="py-3.5 px-3 text-center whitespace-nowrap">หน่วยกิต</th>
                                 <th class="py-3.5 px-3 text-center whitespace-nowrap">กลุ่มเรียน</th>
                                 <th class="py-3.5 px-3 text-center whitespace-nowrap">ประเภทวิชา</th>
-                                <th class="py-3.5 px-4 min-w-[220px]">หมายเหตุ</th>
+                                <th class="py-3.5 px-4 whitespace-nowrap min-w-[150px]">ผู้สอน / อาจารย์ร่วม</th>
+                                <th class="py-3.5 px-4 min-w-[200px]">หมายเหตุ / รายละเอียด</th>
                             </tr>
                         </thead>
                         <tbody id="mission-table-body" class="divide-y divide-purple-100 text-xs">
                             <tr>
-                                <td colspan="7" class="py-8 text-center text-slate-400">
+                                <td colspan="8" class="py-8 text-center text-slate-400">
                                     <i class="fa-solid fa-folder-open text-3xl mb-2 text-purple-200 block"></i>
                                     <p>ยังไม่มีข้อมูลประมาณการพันธกิจ (กรุณานำเข้าไฟล์ Excel ประมาณการพันธกิจ)</p>
                                 </td>
@@ -594,7 +593,7 @@
                 </div>
             </div>
 
-            <!-- SECTION: ตารางประวัติภาระการสอนย้อนหลัง (EXISTING SECTION) -->
+            <!-- SECTION: ตารางประวัติภาระการสอนย้อนหลัง -->
             <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 class="text-sm font-bold text-navy-900 flex items-center">
@@ -753,9 +752,28 @@
             return 'ทุกภาคเรียน';
         }
 
+        // --- HELPER PARSER FUNCTION FOR CO-TEACHERS ---
+        function parseCoTeacherInfo(noteText) {
+            if (!noteText || !String(noteText).includes('ร่วมสอนกับ')) {
+                return { isCoTeaching: false, coTeacherName: null, slots: null, credits: null };
+            }
+            const str = String(noteText).trim();
+            
+            const nameMatch = str.match(/ร่วมสอนกับ\s+([^\s]+(?:\s+[^\s]+)+?)(?=\s+จำนวน|\s+=|\s*$)/) || str.match(/ร่วมสอนกับ\s+([^\s]+(?:\s+[^\s]+)+)/);
+            const slotsMatch = str.match(/จำนวน\s*(\d+)\s*ครั้งสอน/);
+            const creditsMatch = str.match(/=\s*([\d\.]+)\s*นก/);
+
+            return {
+                isCoTeaching: true,
+                coTeacherName: nameMatch ? nameMatch[1].trim() : 'ไม่ระบุชื่อ',
+                slots: slotsMatch ? slotsMatch[1] : '7',
+                credits: creditsMatch ? creditsMatch[1] : '0.93'
+            };
+        }
+
         // --- DATASET DEFINITIONS ---
-        let masterDataset = [];     // ชุดที่ 1: ข้อมูลอาจารย์พิเศษย้อนหลัง 3 ปี
-        let missionDataset = [];    // ชุดที่ 2: ข้อมูลตารางพันธกิจและประมาณการค่าสอน
+        let masterDataset = [];     
+        let missionDataset = [];    
         
         let currentFilters = { year: "ALL", semester: "ALL", degree: "ALL" };
         let currentMatchedLecturerData = [];
@@ -794,6 +812,7 @@
                 "หน่วยกิต": row.credits || '',
                 "ระดับคุณวุฒิ": row.degree || '',
                 "ชื่อ-สกุล อาจารย์": row.name || '',
+                "บทบาท": row.teachingRole || 'อาจารย์ผู้สอนหลัก',
                 "หน่วยงาน / บริษัทสังกัด": row.organization || ''
             }));
 
@@ -801,7 +820,7 @@
             worksheet['!cols'] = [
                 { wch: 8 }, { wch: 12 }, { wch: 14 }, { wch: 28 }, 
                 { wch: 28 }, { wch: 14 }, { wch: 38 }, { wch: 12 }, { wch: 18 }, 
-                { wch: 28 }, { wch: 38 }
+                { wch: 28 }, { wch: 18 }, { wch: 38 }
             ];
 
             const workbook = XLSX.utils.book_new();
@@ -1031,7 +1050,8 @@
                         faculties: new Set([row.faculty]),
                         majors: new Set([row.major]),
                         orgs: new Set([row.organization]),
-                        sessionCount: 1
+                        sessionCount: 1,
+                        isCoTeacher: row.teachingRole === 'อาจารย์ร่วมสอน'
                     });
                 } else {
                     const item = groupedMap.get(key);
@@ -1072,9 +1092,13 @@
                     ? validOrgs.join(', ') 
                     : '<span class="text-slate-400 italic">ไม่ระบุสังกัด</span>';
 
+                const roleBadge = item.isCoTeacher
+                    ? `<span class="ml-1.5 px-1.5 py-0.5 bg-indigo-50 text-indigo-700 text-[10px] font-bold rounded border border-indigo-200">อาจารย์ร่วม</span>`
+                    : '';
+
                 return `
                     <tr class="hover:bg-slate-50 transition border-b border-slate-100">
-                        <td class="py-3 px-4 font-bold text-navy-900 whitespace-nowrap">${item.name}</td>
+                        <td class="py-3 px-4 font-bold text-navy-900 whitespace-nowrap flex items-center">${item.name} ${roleBadge}</td>
                         <td class="py-3 px-3 text-center whitespace-nowrap">
                             <span class="px-2.5 py-1 bg-sky-100 text-sky-800 rounded-full font-extrabold text-xs inline-block">
                                 ${item.sessionCount} รายการ
@@ -1536,21 +1560,23 @@
         }
 
         function executeLecturerSearch(query) {
-            // ค้นหาใน masterDataset (อาจารย์พิเศษ 3 ปี)
-            currentMatchedLecturerData = masterDataset.filter(d => 
-                d.name.toLowerCase().includes(query) || 
-                d.courseCode.toLowerCase().includes(query) ||
-                d.courseName.toLowerCase().includes(query)
-            );
-
-            // ค้นหาใน missionDataset (ตารางประมาณการพันธกิจ)
             const cleanQueryName = normalizeLecturerName(query);
+
+            currentMatchedLecturerData = masterDataset.filter(d => {
+                const matchName = normalizeLecturerName(d.name).includes(cleanQueryName) || d.name.toLowerCase().includes(query);
+                const matchCode = d.courseCode.toLowerCase().includes(query);
+                const matchCourse = d.courseName.toLowerCase().includes(query);
+                const matchCo = d.coTeacherName && normalizeLecturerName(d.coTeacherName).includes(cleanQueryName);
+                return matchName || matchCode || matchCourse || matchCo;
+            });
+
             currentMatchedMissionData = missionDataset.filter(d => {
-                const normalizedLecturerName = normalizeLecturerName(d.name);
-                const matchName = normalizedLecturerName.includes(cleanQueryName) || d.name.toLowerCase().includes(query);
+                const matchName = normalizeLecturerName(d.name).includes(cleanQueryName) || d.name.toLowerCase().includes(query);
                 const matchCourseCode = d.courseCode.toLowerCase().includes(query);
                 const matchCourseName = d.courseName.toLowerCase().includes(query);
-                return matchName || matchCourseCode || matchCourseName;
+                const matchCoTeacher = d.coTeacherName && normalizeLecturerName(d.coTeacherName).includes(cleanQueryName);
+                const matchNote = d.note && d.note.toLowerCase().includes(query);
+                return matchName || matchCourseCode || matchCourseName || matchCoTeacher || matchNote;
             });
 
             const profileCard = document.getElementById('lecturer-profile-card');
@@ -1564,20 +1590,24 @@
 
             profileCard.classList.remove('hidden');
 
-            let sampleName = '';
+            let sampleName = query;
             let sampleDegree = 'ไม่ระบุคุณวุฒิ';
             let sampleOrg = 'ผู้เชี่ยวชาญ / อาจารย์ผู้สอน';
 
-            if (currentMatchedLecturerData.length > 0) {
-                const sample = currentMatchedLecturerData[0];
-                sampleName = sample.name;
-                sampleDegree = sample.degree;
-                sampleOrg = sample.organization || 'ผู้เชี่ยวชาญจากสถานประกอบการ';
-            } else if (currentMatchedMissionData.length > 0) {
-                const sample = currentMatchedMissionData[0];
-                sampleName = sample.name;
-                sampleDegree = sample.position || 'อาจารย์ประจำ / อาจารย์ผู้สอน';
-                sampleOrg = `${sample.faculty || 'คณะบัญชี'} (${sample.position || 'อาจารย์ผู้สอน'})`;
+            const matchedLecturerObj = currentMatchedLecturerData.find(d => normalizeLecturerName(d.name).includes(cleanQueryName)) ||
+                                     currentMatchedMissionData.find(d => normalizeLecturerName(d.name).includes(cleanQueryName)) ||
+                                     currentMatchedMissionData.find(d => d.coTeacherName && normalizeLecturerName(d.coTeacherName).includes(cleanQueryName));
+
+            if (matchedLecturerObj) {
+                if (matchedLecturerObj.coTeacherName && normalizeLecturerName(matchedLecturerObj.coTeacherName).includes(cleanQueryName)) {
+                    sampleName = matchedLecturerObj.coTeacherName;
+                    sampleDegree = 'อาจารย์ร่วมสอน';
+                    sampleOrg = 'อาจารย์ผู้สอนร่วม';
+                } else {
+                    sampleName = matchedLecturerObj.name;
+                    sampleDegree = matchedLecturerObj.degree || matchedLecturerObj.position || 'อาจารย์ผู้สอน';
+                    sampleOrg = matchedLecturerObj.organization || matchedLecturerObj.faculty || 'ผู้เชี่ยวชาญจากสถานประกอบการ';
+                }
             }
 
             document.getElementById('profile-avatar-initial').textContent = sampleName.replace(/^(ผศ\.ดร\.|รศ\.ดร\.|ศ\.ดร\.|ดร\.|ผศ\.|รศ\.|ศ\.|อาจารย์|อ\.|นาย|นางสาว|นาง|คุณ)\s*/i, '').trim().charAt(0) || 'อ';
@@ -1596,10 +1626,9 @@
                 const num = parseFloat(cur.credits);
                 return acc + (isNaN(num) ? 0 : num);
             }, 0);
-            document.getElementById('profile-total-credits').textContent = `${totalCreditsSum} หน่วยกิต`;
+            document.getElementById('profile-total-credits').textContent = `${totalCreditsSum.toFixed(2)} หน่วยกิต`;
 
-            // นับจำนวนรายวิชาพันธกิจ (ตามหลักเกณฑ์วิชาเรียนร่วมนับเป็น 1 วิชา)
-            const missionDistinctCourses = currentMatchedMissionData.length; // แต่ละแถวสืบทอดนับเป็น 1 รายวิชาเรียนร่วม/ปกติ
+            const missionDistinctCourses = currentMatchedMissionData.length;
             document.getElementById('profile-mission-courses').textContent = `${missionDistinctCourses} วิชา`;
 
             const facultiesSet = new Set([
@@ -1616,7 +1645,7 @@
             renderMissionReportTable();
         }
 
-        // --- RENDER MISSION REPORT TABLE (หน้ารายงานพันธกิจ) ---
+        // --- RENDER MISSION REPORT TABLE ---
         function renderMissionReportTable() {
             const tbody = document.getElementById('mission-table-body');
             const kpiBadge = document.getElementById('mission-kpi-courses');
@@ -1624,7 +1653,7 @@
             if (currentMatchedMissionData.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" class="py-8 text-center text-slate-400">
+                        <td colspan="8" class="py-8 text-center text-slate-400">
                             <i class="fa-solid fa-folder-open text-3xl mb-2 text-purple-200 block"></i>
                             <p>ไม่พบรายการพันธกิจสำหรับคำค้นหานี้ หรือยังไม่ได้นำเข้าไฟล์ Excel ประมาณการพันธกิจ</p>
                         </td>
@@ -1634,7 +1663,6 @@
                 return;
             }
 
-            // คำนวณ KPI จำนวนรายวิชาทั้งหมด (ตามหลักเกณฑ์วิชาเรียนร่วม/ปกติ แต่ละแถวในตารางพันธกิจนับเป็น 1 รายวิชา)
             const totalUniqueCoursesCount = currentMatchedMissionData.length;
             kpiBadge.textContent = `รวม ${totalUniqueCoursesCount} รายวิชา (นับตามเกณฑ์วิชาเรียนร่วม)`;
 
@@ -1646,6 +1674,25 @@
 
                 const noteDisplay = row.note ? row.note.replace(/\n/g, '<br>') : '-';
 
+                let teacherDisplay = `<div class="font-bold text-slate-800">${row.name}</div>`;
+                if (row.teachingRole === 'อาจารย์ร่วมสอน') {
+                    teacherDisplay += `
+                        <div class="mt-1">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">
+                                <i class="fa-solid fa-user-group mr-1 text-[10px]"></i> ร่วมสอน (${row.coTeacherCredits || '0.93'} นก.)
+                            </span>
+                        </div>
+                    `;
+                } else if (row.hasCoTeacher) {
+                    teacherDisplay += `
+                        <div class="mt-1">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="ร่วมสอน ${row.coTeacherSlots} ครั้ง = ${row.coTeacherCredits} นก.">
+                                <i class="fa-solid fa-user-group mr-1 text-[10px]"></i> ${row.coTeacherName} (${row.coTeacherCredits} นก.)
+                            </span>
+                        </div>
+                    `;
+                }
+
                 return `
                     <tr class="hover:bg-purple-50/50 transition border-b border-purple-100">
                         <td class="py-3 px-4 text-center font-bold text-purple-900">${index + 1}</td>
@@ -1654,6 +1701,7 @@
                         <td class="py-3 px-3 text-center font-bold text-slate-700 whitespace-nowrap">${row.credits}</td>
                         <td class="py-3 px-3 text-center whitespace-nowrap font-medium text-slate-600">${row.section}</td>
                         <td class="py-3 px-3 text-center whitespace-nowrap">${courseTypeBadge}</td>
+                        <td class="py-3 px-4 font-medium text-slate-700">${teacherDisplay}</td>
                         <td class="py-3 px-4 text-slate-600 text-[11px] leading-relaxed font-medium">${noteDisplay}</td>
                     </tr>
                 `;
@@ -1669,12 +1717,14 @@
             const dataToExport = currentMatchedMissionData.length > 0 ? currentMatchedMissionData : missionDataset;
 
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "ลำดับ,รหัสวิชา,ชื่อวิชา,หน่วยกิต,กลุ่มเรียน,ประเภทวิชา,ชื่อ-สกุลอาจารย์,ตำแหน่ง,หมายเหตุ\n";
+            csvContent += "ลำดับ,รหัสวิชา,ชื่อวิชา,หน่วยกิต,กลุ่มเรียน,ประเภทวิชา,ชื่อ-สกุลอาจารย์,ตำแหน่ง,อาจารย์ร่วมสอน,หน่วยกิตร่วมสอน,หมายเหตุ\n";
 
             dataToExport.forEach((row, idx) => {
                 const courseType = row.isCoTeaching ? "วิชาเรียนร่วม" : "วิชาปกติ";
                 const cleanNote = (row.note || '').replace(/"/g, '""').replace(/\n/g, ' ');
-                csvContent += `"${idx + 1}","${row.courseCode}","${row.courseName}","${row.credits}","${row.section}","${courseType}","${row.name}","${row.position}","${cleanNote}"\n`;
+                const coTeacher = row.hasCoTeacher ? row.coTeacherName : "-";
+                const coCredits = row.hasCoTeacher ? row.coTeacherCredits : "-";
+                csvContent += `"${idx + 1}","${row.courseCode}","${row.courseName}","${row.credits}","${row.section}","${courseType}","${row.name}","${row.position}","${coTeacher}","${coCredits}","${cleanNote}"\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
@@ -1707,21 +1757,28 @@
                 return;
             }
 
-            tbody.innerHTML = filteredHistory.map(row => `
-                <tr class="hover:bg-slate-50 transition">
-                    <td class="py-2.5 px-4 font-bold text-navy-900 whitespace-nowrap">${row.year || 'ไม่ระบุ'}</td>
-                    <td class="py-2.5 px-4 whitespace-nowrap"><span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded font-semibold text-[11px] whitespace-nowrap">${row.semester === 'S' ? 'ภาคฤดูร้อน' : 'ภาค ' + row.semester}</span></td>
-                    <td class="py-2.5 px-4 font-semibold text-slate-700 min-w-[200px]">${row.faculty}</td>
-                    <td class="py-2.5 px-4 min-w-[180px]">${row.major}</td>
-                    <td class="py-2.5 px-4 min-w-[380px] whitespace-nowrap">
-                        <span class="font-bold text-sky-600 mr-1.5 inline-block whitespace-nowrap">[${row.courseCode || '-'}]</span>
-                        <span class="font-medium text-slate-800 inline-block whitespace-nowrap">${row.courseName || '-'}</span>
-                    </td>
-                    <td class="py-2.5 px-4 text-center whitespace-nowrap">
-                        <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded font-bold text-xs border border-emerald-200 whitespace-nowrap">${row.credits || '-'}</span>
-                    </td>
-                </tr>
-            `).join('');
+            tbody.innerHTML = filteredHistory.map(row => {
+                const roleBadge = row.teachingRole === 'อาจารย์ร่วมสอน'
+                    ? `<span class="ml-2 px-2 py-0.5 bg-indigo-100 text-indigo-800 rounded font-bold text-[10px]">อาจารย์ร่วมสอน</span>`
+                    : '';
+
+                return `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="py-2.5 px-4 font-bold text-navy-900 whitespace-nowrap">${row.year || 'ไม่ระบุ'}</td>
+                        <td class="py-2.5 px-4 whitespace-nowrap"><span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded font-semibold text-[11px] whitespace-nowrap">${row.semester === 'S' ? 'ภาคฤดูร้อน' : 'ภาค ' + row.semester}</span></td>
+                        <td class="py-2.5 px-4 font-semibold text-slate-700 min-w-[200px]">${row.faculty}</td>
+                        <td class="py-2.5 px-4 min-w-[180px]">${row.major}</td>
+                        <td class="py-2.5 px-4 min-w-[380px] whitespace-nowrap">
+                            <span class="font-bold text-sky-600 mr-1.5 inline-block whitespace-nowrap">[${row.courseCode || '-'}]</span>
+                            <span class="font-medium text-slate-800 inline-block whitespace-nowrap">${row.courseName || '-'}</span>
+                            ${roleBadge}
+                        </td>
+                        <td class="py-2.5 px-4 text-center whitespace-nowrap">
+                            <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded font-bold text-xs border border-emerald-200 whitespace-nowrap">${row.credits || '-'}</span>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         function resetLecturerSearch() {
@@ -1907,6 +1964,7 @@
                                 credits: String(credits || 'N/A').trim(),
                                 degree: cleanDegreeName(degree),
                                 name: name,
+                                teachingRole: 'อาจารย์ผู้สอนหลัก',
                                 organization: String(organization || 'ไม่ระบุสังกัด').trim()
                             });
                         });
@@ -1933,7 +1991,7 @@
             });
         }
 
-        // --- EXCEL UPLOADER 2: สรุปพันธกิจและประมาณการค่าสอน (UPDATED ENGINE WITH FALLBACK) ---
+        // --- EXCEL UPLOADER 2: สรุปพันธกิจและประมาณการค่าสอน ---
         function initMissionExcelUpload() {
             const uploadBtn = document.getElementById('btn-upload-mission-excel');
             const fileInput = document.getElementById('mission-excel-file-input');
@@ -1962,14 +2020,13 @@
                             return;
                         }
 
-                        // ตรวจสอบชื่อคณะและภาคการศึกษาจากส่วนหัวของไฟล์ Excel
                         let fileTitleText = '';
                         for (let r = 0; r < Math.min(rawData.length, 5); r++) {
                             fileTitleText += ' ' + rawData[r].join(' ');
                         }
 
-                        let extractedFaculty = 'คณะบัญชี';
-                        if (fileTitleText.includes('คณะบัญชี')) extractedFaculty = 'คณะบัญชี';
+                        let extractedFaculty = '';
+                        if (fileTitleText.includes('')) extractedFaculty = '';
                         
                         let extractedSemester = '2/2568';
                         const semMatch = fileTitleText.match(/ภาคการศึกษา\s*([0-9Sฤดูร้อน\/]+)/i) || fileTitleText.match(/([123S]\/25[0-9]{2})/i);
@@ -1977,7 +2034,6 @@
 
                         const parsedMissions = [];
                         
-                        // State tracking สำหรับสืบทอดข้อมูลบุคคล (Carry-Forward)
                         let currentLecturer = {
                             seq: '',
                             name: '',
@@ -1987,7 +2043,6 @@
                             carryOver: ''
                         };
 
-                        // อ่านข้อมูลแถวรายการตั้งแต่ Row Index 4 (ข้ามส่วน Header 0-3)
                         for (let i = 4; i < rawData.length; i++) {
                             const row = rawData[i];
                             if (!row || row.length === 0) continue;
@@ -1995,19 +2050,12 @@
                             const col0 = String(row[0] || '').trim(); // ลำดับ
                             const col1 = String(row[1] || '').trim(); // ชื่อ-สกุล
                             const col2 = String(row[2] || '').trim(); // ตำแหน่ง
-                            const col3 = String(row[3] || '').trim(); // พันธกิจตามเกณฑ์ ประจำ
-                            const col4 = String(row[4] || '').trim(); // พันธกิจตามเกณฑ์ พิเศษ
-                            const col5 = String(row[5] || '').trim(); // พันธกิจ ขาด/เกินยกมา
+                            const col3 = String(row[3] || '').trim(); 
+                            const col4 = String(row[4] || '').trim(); 
+                            const col5 = String(row[5] || '').trim(); 
                             
-                            const courseCodeRaw = String(row[6] || '').trim(); // วิชาที่สอน (รหัสวิชา)
-                            let courseNameRaw = String(row[7] || '').trim();   // รายวิชา (ชื่อวิชา)
-                            const creditsRaw = String(row[8] || '').trim();    // จำนวนนก.
-                            const sectionRaw = String(row[9] || '').trim();    // กลุ่มเรียน
-                            const dayRaw = String(row[10] || '').trim();      // วันที่สอน
-                            const timeRaw = String(row[11] || '').trim();     // เวลา
-                            const noteRaw = String(row[20] || row[row.length - 1] || '').trim(); // หมายเหตุ
-
-                            // หากพบชื่ออาจารย์ใหม่ในแถว ให้ทำการอัปเดต State
+                            const courseCodeRaw = String(row[6] || '').trim(); // รหัสวิชา (เช่น BUS22667)
+                            
                             if (col1 !== '') {
                                 currentLecturer = {
                                     seq: col0,
@@ -2018,40 +2066,57 @@
                                     carryOver: col5
                                 };
                             } else if (col2 !== '' && currentLecturer.name !== '') {
-                                // หากแถวถัดมามีคำอธิบายตำแหน่งเพิ่มเติม (ต่อจากแถวแรก)
                                 currentLecturer.position += ' ' + col2;
                             }
 
-                            // หากแถวนี้มีข้อมูลวิชาที่สอน (มีรหัสวิชาหรือชื่อวิชา)
-                            if (courseCodeRaw !== '' || courseNameRaw !== '') {
+                            if (courseCodeRaw !== '') {
                                 const cleanCourseCode = courseCodeRaw.replace(/\s+/g, ' ');
 
-                                // Fallback: หากในไฟล์ Excel ไม่มีชื่อวิชา (หรือเป็นค่าว่าง) ให้ดึงจาก masterDataset (ไฟล์อาจารย์พิเศษย้อนหลัง)
-                                if (!courseNameRaw && cleanCourseCode) {
-                                    // 1. ลองค้นหาด้วยรหัสวิชาแบบตรงกันทั้งสตริง (กรณีใน masterDataset บันทึกรหัสเรียนร่วมไว้ด้วยกัน)
-                                    let matched = masterDataset.find(m => 
-                                        m.courseCode && m.courseCode.replace(/\s+/g, '').toLowerCase() === cleanCourseCode.replace(/\s+/g, '').toLowerCase() &&
-                                        m.courseName && m.courseName !== 'N/A'
-                                    );
+                                const val7 = String(row[7] || '').trim(); 
+                                const val8 = String(row[8] || '').trim();
+                                const val9 = String(row[9] || '').trim();
+                                const val10 = String(row[10] || '').trim();
+                                const val11 = String(row[11] || '').trim();
 
-                                    // 2. หากยังไม่พบ ให้แยกค้นหาด้วยรหัสวิชาย่อยแต่ละตัว (เช่น ACT13367 หรือ ACT212)
-                                    if (!matched) {
-                                        const subCodes = cleanCourseCode.split(/[\/\,\-]/).map(c => c.replace(/\s+/g, '').toLowerCase()).filter(Boolean);
-                                        matched = masterDataset.find(m => {
-                                            if (!m.courseCode || !m.courseName || m.courseName === 'N/A') return false;
-                                            const mCodeClean = m.courseCode.replace(/\s+/g, '').toLowerCase();
-                                            return subCodes.some(sc => mCodeClean.includes(sc));
-                                        });
-                                    }
+                                let courseNameRaw = '-';
+                                let creditsRaw = 'NA';
+                                let sectionRaw = '-';
+                                let dayRaw = '-';
+                                let timeRaw = '-';
 
-                                    if (matched) {
-                                        courseNameRaw = matched.courseName;
+                                // ตรวจสอบว่า val7 เป็นรูปแบบหน่วยกิต หรือเป็นคำว่า 'NA' หรือไม่
+                                const isVal7CreditPattern = /^\d+\(\d+[\-\d]*\)$/.test(val7) || val7.includes('(') || val7.toUpperCase() === 'NA';
+
+                                if (isVal7CreditPattern) {
+                                    // หาก val7 คือ หน่วยกิต หรือ NA แสดงว่าไม่มีคอลัมน์ชื่อวิชาใน Excel
+                                    courseNameRaw = '-';
+                                    creditsRaw = (val7 && val7 !== '-' && val7 !== '') ? val7 : 'NA';
+                                    sectionRaw = (val8 && val8 !== 'NA' && val8 !== '') ? val8 : '-';
+                                    dayRaw = (val9 && val9 !== '') ? val9 : '-';
+                                    timeRaw = (val10 && val10 !== '') ? val10 : '-';
+                                } else {
+                                    // มีคอลัมน์ชื่อวิชา
+                                    courseNameRaw = (val7 && val7 !== 'NA' && val7 !== 'NaN' && val7 !== '') ? val7 : '-';
+                                    creditsRaw = (val8 && val8 !== '-' && val8 !== '') ? val8 : 'NA';
+                                    sectionRaw = (val9 && val9 !== 'NA' && val9 !== '') ? val9 : '-';
+                                    dayRaw = (val10 && val10 !== '') ? val10 : '-';
+                                    timeRaw = (val11 && val11 !== '') ? val11 : '-';
+                                }
+
+                                // ดึงหมายเหตุจากคอลัมน์ฝั่งขวาสุด
+                                let noteRaw = '';
+                                for (let c = row.length - 1; c >= 12; c--) {
+                                    const text = String(row[c] || '').trim();
+                                    if (text !== '') {
+                                        noteRaw = text;
+                                        break;
                                     }
                                 }
 
-                                // กฎการจำแนกวิชาเรียนร่วมและวิชาปกติ:
                                 const isCoTeaching = cleanCourseCode.includes('/');
+                                const coTeacherParsed = parseCoTeacherInfo(noteRaw);
 
+                                // 1. บันทึก Record อาจารย์หลัก
                                 parsedMissions.push({
                                     faculty: extractedFaculty,
                                     semester: extractedSemester,
@@ -2059,14 +2124,43 @@
                                     name: currentLecturer.name || 'ไม่ระบุชื่อ',
                                     position: currentLecturer.position,
                                     courseCode: cleanCourseCode,
-                                    courseName: courseNameRaw || '-',
+                                    courseName: courseNameRaw,
                                     credits: creditsRaw,
                                     section: sectionRaw,
                                     day: dayRaw,
                                     time: timeRaw,
                                     isCoTeaching: isCoTeaching,
+                                    hasCoTeacher: coTeacherParsed.isCoTeaching,
+                                    coTeacherName: coTeacherParsed.coTeacherName,
+                                    coTeacherSlots: coTeacherParsed.slots,
+                                    coTeacherCredits: coTeacherParsed.credits,
+                                    teachingRole: 'อาจารย์ผู้สอนหลัก',
                                     note: noteRaw
                                 });
+
+                                // 2. บันทึก Record อาจารย์ร่วมสอน
+                                if (coTeacherParsed.isCoTeaching && coTeacherParsed.coTeacherName) {
+                                    parsedMissions.push({
+                                        faculty: extractedFaculty,
+                                        semester: extractedSemester,
+                                        seq: currentLecturer.seq,
+                                        name: coTeacherParsed.coTeacherName,
+                                        position: 'อาจารย์ร่วมสอน',
+                                        courseCode: cleanCourseCode,
+                                        courseName: courseNameRaw,
+                                        credits: creditsRaw,
+                                        section: sectionRaw,
+                                        day: dayRaw,
+                                        time: timeRaw,
+                                        isCoTeaching: isCoTeaching,
+                                        hasCoTeacher: false,
+                                        coTeacherName: null,
+                                        coTeacherSlots: coTeacherParsed.slots,
+                                        coTeacherCredits: coTeacherParsed.credits,
+                                        teachingRole: 'อาจารย์ร่วมสอน',
+                                        note: `ร่วมสอนกับ ${currentLecturer.name} จำนวน ${coTeacherParsed.slots} ครั้งสอน = ${coTeacherParsed.credits} นก.`
+                                    });
+                                }
                             }
                         }
 
@@ -2075,15 +2169,13 @@
                             document.getElementById('data-empty-notice').classList.add('hidden');
                             document.getElementById('notice-status-text').textContent = `นำเข้าประมาณการพันธกิจแล้ว (${parsedMissions.length} รายการ)`;
                             
-                            // รีเฟรชสถานะ KPI และตาราง
                             updateOverviewKpis();
                             renderMissionReportTable();
 
-                            // หากมีการพิมพ์ค้นหาไว้ในช่องค้นหา ให้ประมวลผลทันที
                             const query = document.getElementById('lecturer-search-input').value.trim().toLowerCase();
                             if (query) executeLecturerSearch(query);
 
-                            alert(`นำเข้าข้อมูลประมาณการพันธกิจเรียบร้อยแล้ว!\n- คณะ: ${extractedFaculty}\n- ภาคการศึกษา: ${extractedSemester}\n- รวมทั้งหมด: ${parsedMissions.length} รายการวิชา`);
+                            alert(`นำเข้าข้อมูลประมาณการพันธกิจเรียบร้อยแล้ว!\n- คณะ: ${extractedFaculty}\n- รวมทั้งหมด: ${parsedMissions.length} รายการวิชา`);
                         } else {
                             alert("ไม่พบข้อมูลวิชาที่สอนในไฟล์ตารางพันธกิจ กรุณาตรวจสอบรูปแบบไฟล์ Excel");
                         }
