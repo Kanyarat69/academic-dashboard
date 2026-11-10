@@ -489,13 +489,13 @@
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                             <i class="fa-solid fa-magnifying-glass text-lg"></i>
                         </div>
-                        <input type="text" id="lecturer-search-input" class="w-full pl-11 pr-24 py-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:bg-white transition shadow-sm" placeholder="พิมพ์ชื่ออาจารย์ เช่น 'ถวิลย์', 'เอกพงษ์', 'ศศิน' หรือรหัสวิชา...">
+                        <input type="text" id="lecturer-search-input" class="w-full pl-11 pr-24 py-3.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:ring-2 focus:ring-sky-500 focus:bg-white transition shadow-sm" placeholder="พิมพ์ชื่ออาจารย์ เช่น 'เจียมจิต', 'อนันต์', 'ศศิน' หรือรหัสวิชา...">
                         <button id="btn-clear-search" class="absolute right-2 top-2 px-3 py-1.5 text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg transition font-bold">ล้างค่า</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Profile Card (Full Width) -->
+            <!-- Profile Card (Full Width - รักษาสภาพ UI เดิมไว้ 100%) -->
             <div id="lecturer-profile-card" class="hidden">
                 <div class="bg-gradient-to-r from-sky-900 via-navy-900 to-slate-900 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex flex-col justify-between">
                     <div>
@@ -781,7 +781,7 @@
         let chartYoy = null, chartDegree = null, chartFacultyTop10 = null;
         let chartSemester = null, chartFacultyYoy = null, chartFacultyMajor = null;
 
-        // ฟังก์ชันช่วยเหลือสำหรับค้นหาชื่อวิชาจาก Master Dataset (เพิ่มการดักจับเลขห้องเรียนทุกรูปแบบ)
+        // ฟังก์ชันช่วยเหลือสำหรับค้นหาชื่อวิชาจาก Master Dataset
         function findCourseNameFromMaster(courseCode) {
             if (!masterDataset || masterDataset.length === 0 || !courseCode) return '';
             const subCodes = String(courseCode).split(/[\/\s]+/).map(c => c.trim().toLowerCase()).filter(Boolean);
@@ -1664,8 +1664,16 @@
             }, 0);
             document.getElementById('profile-total-credits').textContent = `${totalCreditsSum.toFixed(2)} หน่วยกิต`;
 
-            const missionDistinctCourses = currentMatchedMissionData.length;
-            document.getElementById('profile-mission-courses').textContent = `${missionDistinctCourses} วิชา`;
+            // === จุดปรับเปลี่ยน Logic การคำนวณ (รักษารูปแบบ UI เดิมไว้ 100%) ===
+            const missionTotalSections = currentMatchedMissionData.length;
+            const missionDistinctCourseCodes = new Set(currentMatchedMissionData.map(m => m.courseCode)).size;
+
+            // แสดงผลจำนวนวิชา และจำนวนกลุ่มเรียน ในช่อง "ประมาณการรายวิชาพันธกิจ:" เดิม
+            if (missionTotalSections > 0) {
+                document.getElementById('profile-mission-courses').textContent = `${missionDistinctCourseCodes} วิชา (${missionTotalSections} กลุ่มเรียน)`;
+            } else {
+                document.getElementById('profile-mission-courses').textContent = `0 วิชา`;
+            }
 
             const facultiesSet = new Set([
                 ...currentMatchedLecturerData.map(m => m.faculty),
@@ -2011,7 +2019,6 @@
                             populateFacultyDropdown();
                             refreshAllViews();
                             
-                            // *** เรียกใช้การ re-match ชื่อวิชาในไฟล์ประมาณการ ***
                             reMatchMissionCourseNames();
 
                             const uniqueCount = getUniqueLecturers(parsedData).length;
@@ -2029,7 +2036,7 @@
             });
         }
 
-        // --- EXCEL UPLOADER 2: สรุปพันธกิจและประมาณการค่าสอน (อัปเดต Regex กรองห้องเรียน) ---
+        // --- EXCEL UPLOADER 2: สรุปพันธกิจและประมาณการค่าสอน ---
         function initMissionExcelUpload() {
             const uploadBtn = document.getElementById('btn-upload-mission-excel');
             const fileInput = document.getElementById('mission-excel-file-input');
@@ -2085,9 +2092,9 @@
                         const isCreditPattern = (str) => /^\d+\(\d+[\-\d]*\)$/.test(str) || (str.includes('(') && str.includes(')'));
                         const isTimePattern = (str) => /^\d{4}\s*-\s*\d{4}$/.test(str) || /^\d{2}:\d{2}\s*-\s*\d{2}:\d{2}$/.test(str);
                         const isSectionPattern = (str) => /^[A-Z0-9\/\s\-]+$/i.test(str) && (str.includes('/') || /^([TDSL]\d{3}|[A-Z]\d{3}|\d{1,3})$/i.test(str));
-                        
-                        // *** เพิ่มตัวกรองเลขห้องครอบคลุมรูปแบบ เช่น 11-12A03, 01-0804 ***
                         const isRoomPattern = (str) => /^\d{1,3}-\d{2,4}[A-Za-z0-9]*$/i.test(str) || /^\d{2,4}\/\d{2,4}$/.test(str) || /^(room|ห้อง|อาคาร|ตึก|ชั้น)\s*[A-Za-z0-9\-\.]+/i.test(str);
+
+                        const namePrefixRegex = /^(ผศ|รศ|ศ|ดร|อ|อาจารย์|นาย|นาง|นางสาว|คุณ)/i;
 
                         for (let i = 4; i < rawData.length; i++) {
                             const row = rawData[i];
@@ -2100,9 +2107,9 @@
                             const col4 = String(row[4] || '').trim(); 
                             const col5 = String(row[5] || '').trim(); 
                             
-                            const courseCodeRaw = String(row[6] || '').trim();
-                            
-                            if (col1 !== '') {
+                            const isNewLecturerName = col1 !== '' && !col1.startsWith('(') && (col0 !== '' || namePrefixRegex.test(col1));
+
+                            if (isNewLecturerName) {
                                 currentLecturer = {
                                     seq: col0,
                                     name: col1,
@@ -2111,18 +2118,28 @@
                                     reqSpecial: col4,
                                     carryOver: col5
                                 };
-                            } else if (col2 !== '' && currentLecturer.name !== '') {
-                                currentLecturer.position += ' ' + col2;
                             }
 
-                            if (courseCodeRaw !== '') {
+                            let courseCodeRaw = '';
+                            let courseCodeColIndex = -1;
+                            
+                            for (let c = 5; c <= 8; c++) {
+                                const val = String(row[c] || '').trim();
+                                if (/^[A-Z]{2,4}\d{3,5}/i.test(val)) {
+                                    courseCodeRaw = val;
+                                    courseCodeColIndex = c;
+                                    break;
+                                }
+                            }
+
+                            if (courseCodeRaw !== '' && currentLecturer.name !== '') {
                                 const cleanCourseCode = courseCodeRaw.replace(/\s+/g, ' ');
 
-                                const val7 = String(row[7] || '').trim(); 
-                                const val8 = String(row[8] || '').trim();
-                                const val9 = String(row[9] || '').trim();
-                                const val10 = String(row[10] || '').trim();
-                                const val11 = String(row[11] || '').trim();
+                                const val7 = String(row[courseCodeColIndex + 1] || '').trim(); 
+                                const val8 = String(row[courseCodeColIndex + 2] || '').trim();
+                                const val9 = String(row[courseCodeColIndex + 3] || '').trim();
+                                const val10 = String(row[courseCodeColIndex + 4] || '').trim();
+                                const val11 = String(row[courseCodeColIndex + 5] || '').trim();
 
                                 let courseNameRaw = findCourseNameFromMaster(cleanCourseCode);
                                 let creditsRaw = 'NA';
@@ -2149,7 +2166,7 @@
                                 }
 
                                 if (!courseNameRaw) {
-                                    for (let c = 7; c < Math.min(row.length, 13); c++) {
+                                    for (let c = courseCodeColIndex + 1; c < Math.min(row.length, 13); c++) {
                                         const text = String(row[c] || '').trim();
                                         if (text && !isCreditPattern(text) && !isTimePattern(text) && !isSectionPattern(text) && !isRoomPattern(text) &&
                                             isNaN(Number(text)) && text !== '-' && text !== 'NA' && text.length > 3) {
@@ -2164,11 +2181,14 @@
                                 }
 
                                 let noteRaw = '';
+                                if (col1.startsWith('(')) {
+                                    noteRaw = col1;
+                                }
                                 const noteIndex = 13;
                                 if (row.length > noteIndex) {
                                     const text = String(row[noteIndex] || '').trim();
                                     if (text !== '' && isNaN(Number(text))) {
-                                        noteRaw = text;
+                                        noteRaw = noteRaw ? `${noteRaw} | ${text}` : text;
                                     }
                                 }
 
@@ -2179,7 +2199,7 @@
                                     faculty: extractedFaculty,
                                     semester: extractedSemester,
                                     seq: currentLecturer.seq,
-                                    name: currentLecturer.name || 'ไม่ระบุชื่อ',
+                                    name: currentLecturer.name,
                                     position: currentLecturer.position,
                                     courseCode: cleanCourseCode,
                                     courseName: courseNameRaw,
@@ -2195,29 +2215,6 @@
                                     teachingRole: 'อาจารย์ผู้สอนหลัก',
                                     note: noteRaw || ''
                                 });
-
-                                if (coTeacherParsed.isCoTeaching && coTeacherParsed.coTeacherName) {
-                                    parsedMissions.push({
-                                        faculty: extractedFaculty,
-                                        semester: extractedSemester,
-                                        seq: currentLecturer.seq,
-                                        name: coTeacherParsed.coTeacherName,
-                                        position: 'อาจารย์ร่วมสอน',
-                                        courseCode: cleanCourseCode,
-                                        courseName: courseNameRaw,
-                                        credits: creditsRaw,
-                                        section: sectionRaw,
-                                        day: dayRaw,
-                                        time: timeRaw,
-                                        isCoTeaching: isCoTeaching,
-                                        hasCoTeacher: false,
-                                        coTeacherName: null,
-                                        coTeacherSlots: coTeacherParsed.slots,
-                                        coTeacherCredits: coTeacherParsed.credits,
-                                        teachingRole: 'อาจารย์ร่วมสอน',
-                                        note: noteRaw ? `ร่วมสอนกับ ${currentLecturer.name} จำนวน ${coTeacherParsed.slots} ครั้งสอน = ${coTeacherParsed.credits} นก.` : ''
-                                    });
-                                }
                             }
                         }
 
