@@ -495,7 +495,7 @@
                 </div>
             </div>
 
-            <!-- Profile Card (Full Width - รักษาสภาพ UI เดิมไว้ 100%) -->
+            <!-- Profile Card -->
             <div id="lecturer-profile-card" class="hidden">
                 <div class="bg-gradient-to-r from-sky-900 via-navy-900 to-slate-900 rounded-2xl p-6 text-white shadow-xl border border-slate-800 flex flex-col justify-between">
                     <div>
@@ -546,7 +546,7 @@
                 </div>
             </div>
 
-            <!-- SECTION: ตารางสรุปพันธกิจและประมาณการค่าสอน -->
+            <!-- SECTION: ตารางสรุปพันธกิจและประมาณการค่าสอน (พร้อมระบบสลับลิงก์ Google Drive อัตโนมัติ) -->
             <div id="mission-report-card" class="bg-white rounded-2xl shadow-sm border border-purple-200 overflow-hidden">
                 <div class="p-4 bg-gradient-to-r from-purple-900 to-navy-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
@@ -572,13 +572,13 @@
                         <thead class="bg-purple-50 text-xs font-bold text-purple-900 uppercase sticky top-0 border-b border-purple-200 z-10">
                             <tr>
                                 <th class="py-3.5 px-4 text-center whitespace-nowrap w-14">ลำดับ</th>
+                                <th class="py-3.5 px-4 whitespace-nowrap min-w-[170px]">ชื่ออาจารย์ผู้สอน</th>
                                 <th class="py-3.5 px-4 whitespace-nowrap font-extrabold text-purple-950">รหัสวิชา</th>
                                 <th class="py-3.5 px-4 min-w-[220px]">ชื่อวิชา</th>
+                                <th class="py-3.5 px-3 text-center whitespace-nowrap">ประเภทวิชา</th>
                                 <th class="py-3.5 px-3 text-center whitespace-nowrap">หน่วยกิต</th>
                                 <th class="py-3.5 px-3 text-center whitespace-nowrap">กลุ่มเรียน</th>
-                                <th class="py-3.5 px-3 text-center whitespace-nowrap">ประเภทวิชา</th>
-                                <th class="py-3.5 px-4 whitespace-nowrap min-w-[150px]">ผู้สอน / อาจารย์ร่วม</th>
-                                <th class="py-3.5 px-4 min-w-[200px]">หมายเหตุ / รายละเอียด</th>
+                                <th class="py-3.5 px-4 min-w-[240px]">หมายเหตุ / รายละเอียด</th>
                             </tr>
                         </thead>
                         <tbody id="mission-table-body" class="divide-y divide-purple-100 text-xs">
@@ -781,7 +781,6 @@
         let chartYoy = null, chartDegree = null, chartFacultyTop10 = null;
         let chartSemester = null, chartFacultyYoy = null, chartFacultyMajor = null;
 
-        // ฟังก์ชันช่วยเหลือสำหรับค้นหาชื่อวิชาจาก Master Dataset
         function findCourseNameFromMaster(courseCode) {
             if (!masterDataset || masterDataset.length === 0 || !courseCode) return '';
             const subCodes = String(courseCode).split(/[\/\s]+/).map(c => c.trim().toLowerCase()).filter(Boolean);
@@ -801,7 +800,6 @@
             return '';
         }
 
-        // ฟังก์ชันช่วยย้อนกลับไป Match ชื่อวิชาใน Mission Dataset ทุกครั้งที่มีการอัปโหลด อ.พิเศษ ใหม่
         function reMatchMissionCourseNames() {
             if (missionDataset.length === 0 || masterDataset.length === 0) return;
             
@@ -866,16 +864,7 @@
                 ? `รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ_ทั้งหมด.xlsx` 
                 : `รายงานวิเคราะห์ข้อมูลอาจารย์พิเศษ_ระดับ${degreeType}.xlsx`;
 
-            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
+            XLSX.writeFile(workbook, filename);
         }
 
         function exportFacultyDegreeExcel() {
@@ -953,16 +942,7 @@
             const semLabel = selectedSemester === 'ALL' ? 'ทุกภาคเรียน' : `ภาค${selectedSemester}`;
             const filename = `สรุปจำนวนอาจารย์พิเศษจำแนกตามคณะและคุณวุฒิ_${facLabel}_ปี${currentFilters.year}_${semLabel}.xlsx`;
 
-            const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-            const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = filename;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(link.href);
+            XLSX.writeFile(workbook, filename);
         }
 
         function normalizeLecturerName(value) {
@@ -1664,13 +1644,39 @@
             }, 0);
             document.getElementById('profile-total-credits').textContent = `${totalCreditsSum.toFixed(2)} หน่วยกิต`;
 
-            // === จุดปรับเปลี่ยน Logic การคำนวณ (รักษารูปแบบ UI เดิมไว้ 100%) ===
+            let countTheory = 0;
+            let countLab = 0;
+            let countCombined = 0;
+            let countOther = 0;
+
+            currentMatchedMissionData.forEach(m => {
+                const sec = String(m.section || '').trim().toUpperCase();
+                if (sec.includes('T+L')) {
+                    countCombined++;
+                } else if (sec.startsWith('T') || sec.includes('/T')) {
+                    countTheory++;
+                } else if (sec.startsWith('L') || sec.includes('/L')) {
+                    countLab++;
+                } else if (sec !== '' && sec !== '-') {
+                    countOther++;
+                }
+            });
+
             const missionTotalSections = currentMatchedMissionData.length;
             const missionDistinctCourseCodes = new Set(currentMatchedMissionData.map(m => m.courseCode)).size;
 
-            // แสดงผลจำนวนวิชา และจำนวนกลุ่มเรียน ในช่อง "ประมาณการรายวิชาพันธกิจ:" เดิม
+            let secSummaryParts = [];
+            if (countTheory > 0) secSummaryParts.push(`ทฤษฎี ${countTheory} กลุ่ม`);
+            if (countLab > 0) secSummaryParts.push(`ปฏิบัติ ${countLab} กลุ่ม`);
+            if (countCombined > 0) secSummaryParts.push(`ทฤษฎี+ปฏิบัติ ${countCombined} กลุ่ม`);
+            if (countOther > 0) secSummaryParts.push(`อื่นๆ ${countOther} กลุ่ม`);
+
+            const formattedSecDetail = secSummaryParts.length > 0 
+                ? secSummaryParts.join(' | ') 
+                : `${missionTotalSections} กลุ่มเรียน`;
+
             if (missionTotalSections > 0) {
-                document.getElementById('profile-mission-courses').textContent = `${missionDistinctCourseCodes} วิชา (${missionTotalSections} กลุ่มเรียน)`;
+                document.getElementById('profile-mission-courses').textContent = `${missionDistinctCourseCodes} วิชา (${formattedSecDetail})`;
             } else {
                 document.getElementById('profile-mission-courses').textContent = `0 วิชา`;
             }
@@ -1681,14 +1687,25 @@
             ]);
             document.getElementById('profile-faculties-count').textContent = `${facultiesSet.size} คณะ`;
 
-            const availableYears = Array.from(new Set(currentMatchedLecturerData.map(m => String(m.year)))).filter(y => y && y !== 'ไม่ระบุ').sort();
-            yearFilter.innerHTML = '<option value="ALL">ทุกปีการศึกษา</option>' + 
-                availableYears.map(y => `<option value="${y}">ปี ${y}</option>`).join('');
+            // === สร้างตัวเลือกปีการศึกษาใน Dropdown ย้อนหลังรายบุคคลจากประวัติอาจารย์จริง ===
+            const availableYears = Array.from(new Set(currentMatchedLecturerData.map(m => String(m.year))))
+                .filter(y => y && y !== 'undefined')
+                .sort((a, b) => b.localeCompare(a));
+
+            let yearOptionsHtml = '<option value="ALL">ทุกปีการศึกษา</option>';
+            availableYears.forEach(y => {
+                const label = (y === 'ไม่ระบุ') ? 'ไม่ระบุปี' : `ปีการศึกษา ${y}`;
+                yearOptionsHtml += `<option value="${y}">${label}</option>`;
+            });
+
+            yearFilter.innerHTML = yearOptionsHtml;
+            yearFilter.value = 'ALL';
 
             filterLecturerTableHistory();
             renderMissionReportTable();
         }
 
+        // === ฟังก์ชันแสดงผลตารางพันธกิจ (ระบบสลับลิงก์ Google Drive อัตโนมัติ 3 คณะ) ===
         function renderMissionReportTable() {
             const tbody = document.getElementById('mission-table-body');
             const kpiBadge = document.getElementById('mission-kpi-courses');
@@ -1709,43 +1726,99 @@
             const totalUniqueCoursesCount = currentMatchedMissionData.length;
             kpiBadge.textContent = `รวม ${totalUniqueCoursesCount} รายวิชา (นับตามเกณฑ์วิชาเรียนร่วม)`;
 
+            // 1. ตารางรวมลิงก์ Google Drive แยกรายคณะ (บัญชี, นิติศาสตร์, นิเทศศาสตร์)
+            const facultyDriveLinks = {
+                'บัญชี': 'https://docs.google.com/spreadsheets/d/1UueLvkTS7gn6bNc-R_5P485A0-xA2Ily/edit?usp=drive_link&ouid=107080842240450113194&rtpof=true&sd=true',
+                'นิติศาสตร์': 'https://docs.google.com/spreadsheets/d/10loHRKiAlxuI1ilTyOta0Kzs7IKLK9nx/edit?usp=drive_link&ouid=107080842240450113194&rtpof=true&sd=true',
+                'นิเทศศาสตร์': 'https://docs.google.com/spreadsheets/d/1xFh5QIyQHXhn5ILbNTuJ0vYQ6AwHV9ez/edit?usp=drive_link&ouid=107080842240450113194&rtpof=true&sd=true'
+            };
+
+            // ลิงก์สำรอง (กรณีไม่พบชื่อคณะในระบบ)
+            const defaultDriveLink = 'https://docs.google.com/spreadsheets/d/10loHRKiAlxuI1ilTyOta0Kzs7IKLK9nx/edit?usp=drive_link&ouid=107080842240450113194&rtpof=true&sd=true';
+
             tbody.innerHTML = currentMatchedMissionData.map((row, index) => {
                 const isCoTeaching = row.isCoTeaching;
                 const courseTypeBadge = isCoTeaching
                     ? `<span class="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-md font-bold text-xs border border-amber-300 inline-block">วิชาเรียนร่วม</span>`
                     : `<span class="px-2.5 py-1 bg-sky-100 text-sky-800 rounded-md font-bold text-xs border border-sky-300 inline-block">วิชาปกติ</span>`;
 
-                const noteDisplay = (row.note && row.note.trim() !== '') ? row.note.replace(/\n/g, '<br>') : '-';
+                const noteText = (row.note && row.note.trim() !== '') ? row.note.replace(/\n/g, '<br>') : '';
+                
+                // 2. ดึงชื่อคณะและเลือกลิงก์ Google Drive ให้ตรงกับคณะแบบ Dynamic
+                const facName = row.faculty || 'ทั่วไป';
+                const activeDriveUrl = facultyDriveLinks[facName] || defaultDriveLink;
 
-                let teacherDisplay = `<div class="font-bold text-slate-800">${row.name}</div>`;
+                // 3. สร้างปุ่มลิงก์ที่แสดงชื่อคณะและ URL ปลายทางตรงตามคณะนั้นๆ
+                const excelLinkHtml = `
+                    <div class="mt-1">
+                        <a href="${activeDriveUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center text-[11px] font-bold text-purple-700 hover:text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200 px-2 py-0.5 rounded transition shadow-2xs" title="กดดูรายละเอียดผ่าน Google Drive คณะ${facName}">
+                            <i class="fa-solid fa-file-excel text-emerald-600 mr-1"></i> ดูรายละเอียด Excel (คณะ${facName})
+                        </a>
+                    </div>
+                `;
+
+                const noteDisplay = noteText 
+                    ? `<div class="text-slate-700 font-medium">${noteText}</div>${excelLinkHtml}`
+                    : excelLinkHtml;
+
+                let teacherDisplay = `<div class="font-bold text-navy-900">${row.name}</div>`;
                 if (row.teachingRole === 'อาจารย์ร่วมสอน') {
                     teacherDisplay += `
-                        <div class="mt-1">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">
-                                <i class="fa-solid fa-user-group mr-1 text-[10px]"></i> ร่วมสอน (${row.coTeacherCredits || '0.93'} นก.)
+                        <div class="mt-0.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">
+                                <i class="fa-solid fa-user-group mr-1 text-[9px]"></i> ร่วมสอน (${row.coTeacherCredits || '0.93'} นก.)
                             </span>
                         </div>
                     `;
                 } else if (row.hasCoTeacher) {
                     teacherDisplay += `
-                        <div class="mt-1">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="ร่วมสอน ${row.coTeacherSlots} ครั้ง = ${row.coTeacherCredits} นก.">
-                                <i class="fa-solid fa-user-group mr-1 text-[10px]"></i> ${row.coTeacherName} (${row.coTeacherCredits} นก.)
+                        <div class="mt-0.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="ร่วมสอน ${row.coTeacherSlots} ครั้ง = ${row.coTeacherCredits} นก.">
+                                <i class="fa-solid fa-user-group mr-1 text-[9px]"></i> ${row.coTeacherName} (${row.coTeacherCredits} นก.)
                             </span>
                         </div>
                     `;
                 }
 
+                const displayCourseName = (row.courseName && row.courseName !== 'NA' && row.courseName !== '-' && !/^\d+(\.\d+)?\s*ชม\.$/i.test(row.courseName))
+                    ? row.courseName
+                    : '-';
+
                 return `
                     <tr class="hover:bg-purple-50/50 transition border-b border-purple-100">
                         <td class="py-3 px-4 text-center font-bold text-purple-900">${index + 1}</td>
+                        <td class="py-3 px-4 min-w-[170px]">${teacherDisplay}</td>
                         <td class="py-3 px-4 font-extrabold text-sky-700 whitespace-nowrap">${row.courseCode}</td>
-                        <td class="py-3 px-4 font-semibold text-slate-800">${row.courseName || '-'}</td>
-                        <td class="py-3 px-3 text-center font-bold text-slate-700 whitespace-nowrap">${row.credits}</td>
-                        <td class="py-3 px-3 text-center whitespace-nowrap font-medium text-slate-600">${row.section}</td>
+                        <td class="py-3 px-4 font-semibold text-slate-800 min-w-[220px]">${displayCourseName}</td>
                         <td class="py-3 px-3 text-center whitespace-nowrap">${courseTypeBadge}</td>
-                        <td class="py-3 px-4 font-medium text-slate-700">${teacherDisplay}</td>
-                        <td class="py-3 px-4 text-slate-600 text-[11px] leading-relaxed font-medium">${noteDisplay}</td>
+                        <td class="py-3 px-3 text-center font-bold text-slate-700 whitespace-nowrap">${row.credits}</td>
+                        <td class="py-3 px-3 text-center whitespace-nowrap">
+                            ${(() => {
+                                const rawSec = String(row.section || '').trim().toUpperCase();
+                                if (rawSec.includes('T+L')) {
+                                    return `<div class="inline-flex flex-col items-center">
+                                        <span class="px-2.5 py-0.5 rounded-md font-extrabold text-xs bg-indigo-100 text-indigo-900 border border-indigo-300 shadow-xs">${row.section}</span>
+                                        <span class="text-[10px] font-bold text-indigo-700 mt-0.5">ทฤษฎี+ปฏิบัติ</span>
+                                    </div>`;
+                                } else if (rawSec.startsWith('T') || rawSec.includes('/T')) {
+                                    return `<div class="inline-flex flex-col items-center">
+                                        <span class="px-2.5 py-0.5 rounded-md font-extrabold text-xs bg-sky-100 text-sky-900 border border-sky-300 shadow-xs">${row.section}</span>
+                                        <span class="text-[10px] font-bold text-sky-700 mt-0.5"><i class="fa-solid fa-book-open mr-0.5"></i>กลุ่มทฤษฎี</span>
+                                    </div>`;
+                                } else if (rawSec.startsWith('L') || rawSec.includes('/L')) {
+                                    return `<div class="inline-flex flex-col items-center">
+                                        <span class="px-2.5 py-0.5 rounded-md font-extrabold text-xs bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-xs">${row.section}</span>
+                                        <span class="text-[10px] font-bold text-emerald-700 mt-0.5"><i class="fa-solid fa-flask mr-0.5"></i>กลุ่มปฏิบัติ</span>
+                                    </div>`;
+                                } else {
+                                    return `<div class="inline-flex flex-col items-center">
+                                        <span class="px-2.5 py-0.5 rounded-md font-extrabold text-xs bg-slate-100 text-slate-800 border border-slate-300">${row.section || '-'}</span>
+                                        <span class="text-[10px] font-bold text-slate-500 mt-0.5">กลุ่มเรียน</span>
+                                    </div>`;
+                                }
+                            })()}
+                        </td>
+                        <td class="py-3 px-4 text-slate-600 text-[11px] leading-relaxed">${noteDisplay}</td>
                     </tr>
                 `;
             }).join('');
@@ -1760,14 +1833,13 @@
             const dataToExport = currentMatchedMissionData.length > 0 ? currentMatchedMissionData : missionDataset;
 
             let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-            csvContent += "ลำดับ,รหัสวิชา,ชื่อวิชา,หน่วยกิต,กลุ่มเรียน,ประเภทวิชา,ชื่อ-สกุลอาจารย์,ตำแหน่ง,อาจารย์ร่วมสอน,หน่วยกิตร่วมสอน,หมายเหตุ\n";
+            csvContent += "ลำดับ,ชื่อ-สกุลอาจารย์,รหัสวิชา,ชื่อวิชา,ประเภทวิชา,หน่วยกิต,กลุ่มเรียน,หมายเหตุ\n";
 
             dataToExport.forEach((row, idx) => {
                 const courseType = row.isCoTeaching ? "วิชาเรียนร่วม" : "วิชาปกติ";
+                const displayCourseName = (row.courseName && row.courseName !== 'NA' && row.courseName !== '-' && !/^\d+(\.\d+)?\s*ชม\.$/i.test(row.courseName)) ? row.courseName : '';
                 const cleanNote = (row.note || '').replace(/"/g, '""').replace(/\n/g, ' ');
-                const coTeacher = row.hasCoTeacher ? row.coTeacherName : "-";
-                const coCredits = row.hasCoTeacher ? row.coTeacherCredits : "-";
-                csvContent += `"${idx + 1}","${row.courseCode}","${row.courseName}","${row.credits}","${row.section}","${courseType}","${row.name}","${row.position}","${coTeacher}","${coCredits}","${cleanNote}"\n`;
+                csvContent += `"${idx + 1}","${row.name}","${row.courseCode}","${displayCourseName}","${courseType}","${row.credits}","${row.section}","${cleanNote}"\n`;
             });
 
             const encodedUri = encodeURI(csvContent);
@@ -1779,6 +1851,7 @@
             document.body.removeChild(link);
         }
 
+        // === ฟังก์ชันกรองประวัติภาระการสอนย้อนหลังตามปีการศึกษาและภาคเรียนที่เลือก ===
         function filterLecturerTableHistory() {
             if (currentMatchedLecturerData.length === 0) return;
 
@@ -1796,7 +1869,7 @@
             countBadge.textContent = `พบ ${filteredHistory.length} รายการภาระงาน`;
 
             if (filteredHistory.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400"><p>ไม่พบประวัติการสอนในภาคเรียน/ปีการศึกษาที่เลือก</p></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-8 text-center text-slate-400"><p>ไม่พบประวัติการสอนในปีการศึกษาหรือภาคเรียนที่เลือก</p></td></tr>`;
                 return;
             }
 
@@ -1807,7 +1880,7 @@
 
                 return `
                     <tr class="hover:bg-slate-50 transition">
-                        <td class="py-2.5 px-4 font-bold text-navy-900 whitespace-nowrap">${row.year || 'ไม่ระบุ'}</td>
+                        <td class="py-2.5 px-4 font-bold text-navy-900 whitespace-nowrap">${row.year && row.year !== 'ไม่ระบุ' ? row.year : 'ไม่ระบุ'}</td>
                         <td class="py-2.5 px-4 whitespace-nowrap"><span class="px-2 py-0.5 bg-sky-50 text-sky-700 rounded font-semibold text-[11px] whitespace-nowrap">${row.semester === 'S' ? 'ภาคฤดูร้อน' : 'ภาค ' + row.semester}</span></td>
                         <td class="py-2.5 px-4 font-semibold text-slate-700 min-w-[200px]">${row.faculty}</td>
                         <td class="py-2.5 px-4 min-w-[180px]">${row.major}</td>
@@ -1883,7 +1956,7 @@
             });
         }
 
-        // --- EXCEL UPLOADER 1: อาจารย์พิเศษ 3 ปีย้อนหลัง ---
+        // === ฟังก์ชันอัปโหลด Excel อ.พิเศษ (ดึงข้อมูลปีการศึกษา 2565-2569 ป้องกันการดึงตัวเลขจากรหัสวิชา) ===
         function initExcelUpload() {
             const uploadBtn = document.getElementById('btn-upload-excel');
             const fileInput = document.getElementById('excel-file-input');
@@ -1932,43 +2005,32 @@
                             const major = getValue(row, ['สาขาวิชา','สาขา','major']);
                             const degree = getValue(row, ['คุณวฒิ','คุณวุฒิ','ระดับคุณวุฒิ','ระดับการศึกษา','degree']);
                             
-                            const rawYearValue = getValue(row, ['ปีการศึกษา', 'ปี พ.ศ.', 'ปีพ.ศ.', 'พ.ศ.', 'ปี', 'academic year', 'year', 'ay', 'ปีการศึกษา/ภาคเรียน']);
+                            const rawYearValue = getValue(row, ['ปีการศึกษา', 'ปีการศึกษา/ภาคเรียน', 'ปี พ.ศ.', 'ปีพ.ศ.', 'พ.ศ.', 'ปี', 'academicyear', 'year', 'ay']);
                             const rawSemesterValue = getValue(row, ['ภาคการศึกษา', 'ภาคเรียน', 'ภาค/ปีการศึกษา', 'ภาค', 'semester', 'ปีการศึกษา/ภาคเรียน']);
                             
                             const rawYearStr = String(rawYearValue || '').trim();
                             const rawSemStr = String(rawSemesterValue || '').trim();
 
-                            const combinedSemYearStr = `${rawSemStr} ${rawYearStr}`.trim();
-                            const slashMatch = combinedSemYearStr.match(/([123sSฤดูร้อน]+)\s*[\/\-]\s*(25\d{2}|20\d{2})/);
-
-                            let semester = 'ALL';
+                            let semester = normalizeSemester(rawSemStr);
                             let year = 'ไม่ระบุ';
 
-                            if (slashMatch) {
-                                semester = normalizeSemester(slashMatch[1]);
-                                year = slashMatch[2].startsWith('20') 
-                                    ? String(parseInt(slashMatch[2], 10) + 543) 
-                                    : slashMatch[2];
+                            // 1. ค้นหาเฉพาะปี พ.ศ. 2565 - 2569 ในช่องปีการศึกษา
+                            const targetYearMatch = rawYearStr.match(/(256[5-9])/);
+                            if (targetYearMatch) {
+                                year = targetYearMatch[0];
                             } else {
-                                semester = normalizeSemester(rawSemStr);
-                                
-                                const rowAllValues = Object.values(row).join(' ');
-                                const combinedText = `${rawYearStr} ${rawSemStr} ${rowAllValues}`;
-
-                                let yearMatch = combinedText.match(/(25\d{2})/);
-                                if (!yearMatch) {
-                                    const yearADMatch = combinedText.match(/(20\d{2})/);
-                                    if (yearADMatch) {
-                                        yearMatch = [String(parseInt(yearADMatch[0], 10) + 543)];
+                                // 2. ถ้าเจอเลข 2 หลัก เช่น 66, 67, 68 ให้แปลงเป็น 2566, 2567, 2568
+                                const shortYearMatch = rawYearStr.match(/(?:^|\D)(6[5-9])(?:$|\D)/);
+                                if (shortYearMatch) {
+                                    year = `25${shortYearMatch[1]}`;
+                                } else {
+                                    // 3. ค้นหาในแถวข้อมูลโดยเจาะจงเฉพาะปี 2565 - 2569 เท่านั้น (ป้องกันไปดึงเลขจากรหัสวิชา เช่น ARC25267)
+                                    const rowText = Object.values(row).join(' ');
+                                    const validYearInRow = rowText.match(/(256[5-9])/);
+                                    if (validYearInRow) {
+                                        year = validYearInRow[0];
                                     }
                                 }
-                                if (!yearMatch) {
-                                    const shortMatch = combinedText.match(/(?:^|\D)(6[5-9])(?:$|\D)/);
-                                    if (shortMatch) {
-                                        yearMatch = [`25${shortMatch[1]}`];
-                                    }
-                                }
-                                if (yearMatch) year = yearMatch[0];
                             }
 
                             const name = String(getValue(row, ['ชื่อ-สกุล','ชื่อ-สกุล อาจารย์','ชื่ออาจารย์','อาจารย์ผู้สอน','name']) || '').trim();
@@ -2036,7 +2098,6 @@
             });
         }
 
-        // --- EXCEL UPLOADER 2: สรุปพันธกิจและประมาณการค่าสอน ---
         function initMissionExcelUpload() {
             const uploadBtn = document.getElementById('btn-upload-mission-excel');
             const fileInput = document.getElementById('mission-excel-file-input');
@@ -2072,6 +2133,7 @@
 
                         let extractedFaculty = 'นิติศาสตร์';
                         if (fileTitleText.includes('บัญชี')) extractedFaculty = 'บัญชี';
+                        else if (fileTitleText.includes('นิเทศ')) extractedFaculty = 'นิเทศศาสตร์';
                         else if (fileTitleText.includes('นิติ')) extractedFaculty = 'นิติศาสตร์';
                         
                         let extractedSemester = '2/2568';
@@ -2176,7 +2238,7 @@
                                     }
                                 }
 
-                                if (!courseNameRaw || isTimePattern(courseNameRaw) || isSectionPattern(courseNameRaw) || isRoomPattern(courseNameRaw)) {
+                                if (!courseNameRaw || isTimePattern(courseNameRaw) || isSectionPattern(courseNameRaw) || isRoomPattern(courseNameRaw) || /^\d+(\.\d+)?\s*ชม\.$/i.test(courseNameRaw)) {
                                     courseNameRaw = '-';
                                 }
 
